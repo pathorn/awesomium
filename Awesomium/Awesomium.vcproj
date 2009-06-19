@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/FI &quot;..\..\Awesomium_Prefix.pch&quot;"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;..\..\chromium\chromium\src\;..\..\chromium\chromium\src\skia\include\corecg;..\..\chromium\chromium\src\skia\include;..\..\chromium\chromium\src\third_party\WebKit\JavaScriptCore;..\..\chromium\chromium\src\third_party\npapi;..\..\chromium\chromium\src\third_party\WebKit\WebKit\chromium\public;..\..\chromium\chromium\src\third_party\WebKit\WebKit\chromium\public\win;..\..\chromium\chromium\src\third_party\WebKit\WebCore\platform\text;..\..\chromium\chromium\src\third_party\icu38\public\common"
+				AdditionalIncludeDirectories="..\..\chromium\chromium\src\webkit\api\public;..\..\chromium\chromium\src\skia\config;..\..\chromium\chromium\src\third_party\skia\include\core;include;..\..\chromium\chromium\src\;..\..\chromium\chromium\src\skia\include\corecg;..\..\chromium\chromium\src\skia\include;..\..\chromium\chromium\src\third_party\WebKit\JavaScriptCore;..\..\chromium\chromium\src\third_party\npapi;..\..\chromium\chromium\src\third_party\WebKit\WebKit\chromium\public;..\..\chromium\chromium\src\third_party\WebKit\WebKit\chromium\public\win;..\..\chromium\chromium\src\third_party\WebKit\WebCore\platform\text;..\..\chromium\chromium\src\third_party\icu38\public\common"
 				PreprocessorDefinitions="WIN32;_WIN32;UNICODE;_DEBUG;OSM_NONCLIENT_BUILD;_WINDOWS;NOMINMAX;WEBKIT_USING_SKIA;U_HAVE_INT32_T=1;U_HAVE_UINT32_T=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="base.lib base_gfx.lib breakpad_handler.lib googleurl.lib net.lib skia.lib gtest.lib bzip2.lib icu.lib libjpeg.lib libpng.lib libxml.lib libxslt.lib modp_b64.lib zlib.lib JavaScriptCore_pcre.lib Port.lib activex_shim.lib WTF.lib V8Bindings.lib v8_snapshot.lib WebCore.lib default_plugin.lib Glue.lib sdch.lib sqlite.lib comctl32.lib rpcrt4.lib shlwapi.lib winmm.lib Usp10.lib Psapi.lib msimg32.lib version.lib Wininet.lib WebKit.lib"
+				AdditionalDependencies="base.lib base_gfx.lib breakpad_handler.lib googleurl.lib net.lib skia.lib gtest.lib libbzip2.lib icui18n.lib icuuc.lib libjpeg.lib libpng.lib libxml2.lib libxslt.lib modp_b64.lib zlib.lib pcre.lib activex_shim.lib WTF.lib v8.lib v8_base.lib WebCore.lib default_plugin.lib Glue.lib sdch.lib sqlite3.lib comctl32.lib rpcrt4.lib shlwapi.lib winmm.lib Usp10.lib Psapi.lib msimg32.lib version.lib Wininet.lib WebKit.lib urlmon.lib DbgHelp.lib Gdi32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.dll"
 				AdditionalLibraryDirectories="..\..\chromium\chromium\src\chrome\Debug\lib"
 				IgnoreAllDefaultLibraries="false"

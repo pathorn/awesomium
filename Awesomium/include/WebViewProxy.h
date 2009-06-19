@@ -34,7 +34,8 @@
 #include "base/basictypes.h"
 #include "webkit/glue/webview.h"
 #include "webkit/glue/webframe.h"
-#include "webkit/glue/weburlrequest.h"
+#include "WebUrlRequest.h"
+#include "WebNavigationType.h"
 #include "webkit/glue/webview_delegate.h"
 #include "webkit/glue/webpreferences.h"
 #include "webkit/glue/webdropdata.h"
@@ -187,15 +188,15 @@ public:
 	void WindowObjectCleared(WebFrame* webframe);
 
 	WindowOpenDisposition DispositionForNavigationAction(::WebView* webview, WebFrame* frame, 
-		const WebRequest* request, WebNavigationType type, WindowOpenDisposition disposition, bool is_redirect);
+		const WebKit::WebURLRequest* request, WebKit::WebNavigationType type, WindowOpenDisposition disposition, bool is_redirect);
 
 	void DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame* frame, NavigationGesture gesture);
 
 	void DidReceiveProvisionalLoadServerRedirect(::WebView* webview, WebFrame* frame);
 
-	void DidFailProvisionalLoadWithError(::WebView* webview, const WebError& error, WebFrame* frame);
+	void DidFailProvisionalLoadWithError(::WebView* webview, const WebKit::WebURLError& error, WebFrame* frame);
 
-	void LoadNavigationErrorPage(WebFrame* frame, const WebRequest* failed_request, const WebError& error,
+	void LoadNavigationErrorPage(WebFrame* frame, const WebKit::WebURLRequest* failed_request, const WebKit::WebURLError& error,
 		const std::string& html, bool replace);
 
 	void DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bool is_new_navigation);
@@ -204,12 +205,12 @@ public:
 
 	void DidFinishLoadForFrame(::WebView* webview, WebFrame* frame);
 
-	void DidFailLoadWithError(::WebView* webview, const WebError& error, WebFrame* forFrame);
+	void DidFailLoadWithError(::WebView* webview, const WebKit::WebURLError& error, WebFrame* forFrame);
 
 	void DidFinishDocumentLoadForFrame(::WebView* webview, WebFrame* frame);
 
-	bool DidLoadResourceFromMemoryCache(::WebView* webview, const WebRequest& request, 
-		const WebResponse& response, WebFrame* frame);
+	bool DidLoadResourceFromMemoryCache(::WebView* webview, const WebKit::WebURLRequest& request, 
+		const WebKit::WebURLResponse& response, WebFrame* frame);
 
 	void DidHandleOnloadEventsForFrame(::WebView* webview, WebFrame* frame);
 
@@ -226,13 +227,13 @@ public:
 
 	void WillCloseFrame(::WebView* webview, WebFrame* frame);
 
-	void AssignIdentifierToRequest(::WebView* webview, uint32 identifier, const WebRequest& request);
+	void AssignIdentifierToRequest(::WebView* webview, uint32 identifier, const WebKit::WebURLRequest& request);
 
-	void WillSendRequest(::WebView* webview, uint32 identifier, WebRequest* request);
+	void WillSendRequest(::WebView* webview, uint32 identifier, WebKit::WebURLRequest* request);
 
 	void DidFinishLoading(::WebView* webview, uint32 identifier);
 
-	void DidFailLoadingWithError(::WebView* webview, uint32 identifier, const WebError& error);
+	void DidFailLoadingWithError(::WebView* webview, uint32 identifier, const WebKit::WebURLError& error);
 
 	void AddMessageToConsole(::WebView* webview, const std::wstring& message, unsigned int line_no, 
 		const std::wstring& source_id);

@@ -34,8 +34,8 @@
 #include "base/path_service.h"
 #include "base/string_util.h"
 #include "webkit/glue/plugins/plugin_list.h"
-#include "webkit/glue/webdatasource.h"
-#include "webkit/glue/webresponse.h"
+#include "WebDataSource.h"
+#include "WebURLResponse.h"
 #include "net/base/base64.h"
 #include <assert.h>
 
@@ -43,6 +43,10 @@
 // For gettimeofday.
 #include <sys/time.h>
 #endif
+
+typedef WebKit::WebURLResponse WebResponse;
+typedef WebKit::WebURLRequest WebRequest;
+typedef WebKit::WebURLError WebError;
 
 WebViewProxy::WebViewProxy(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, Awesomium::WebView* parent)
 : view(0), width(width), height(height), canvas(0), isPopupsDirty(false), needsPainting(false), parent(parent), refCount(0), 
@@ -159,8 +163,8 @@ void WebViewProxy::executeJavascript(const std::string& javascript, const std::w
 	if(!frame)
 		return;
 
-	scoped_ptr<WebRequest> request(WebRequest::Create(GURL("javascript:" + javascript + ";void(0);")));
-	frame->LoadRequest(request.get());
+	WebKit::WebURLRequest request(GURL("javascript:" + javascript + ";void(0);"));
+	frame->LoadRequest(request);
 }
 
 void WebViewProxy::setProperty(const std::string& name, const Awesomium::JSValue& value)
@@ -681,13 +685,13 @@ void WebViewProxy::WindowObjectCleared(WebFrame* webframe)
 //
 // is_redirect is true if this is a redirect rather than user action.
 WindowOpenDisposition WebViewProxy::DispositionForNavigationAction(::WebView* webview, WebFrame* frame,
-	const WebRequest* request, WebNavigationType type, WindowOpenDisposition disposition, bool is_redirect)
+	const WebRequest* request, WebKit::WebNavigationType type, WindowOpenDisposition disposition, bool is_redirect)
 {
-	  Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginNavigate(parent, request->GetURL().spec(), frame->GetName()));
+	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginNavigate(parent, request->url().spec(), frame->GetName()));
 
 	  // TODO - implement whitelisting/blackliting
 
-	  return CURRENT_TAB;
+	return CURRENT_TAB;
 }
 
 // FrameLoadDelegate -------------------------------------------------------
@@ -704,9 +708,10 @@ void WebViewProxy::DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame*
 
 	if(dataSource)
 	{
-		std::string url = dataSource->GetRequest().GetURL().spec();
-		int statusCode = dataSource->GetResponse().GetHttpStatusCode();
-		std::string mimeType = dataSource->GetResponse().GetMimeType();
+		std::string url = dataSource->request().url().spec();
+		int statusCode = dataSource->response().httpStatusCode();
+		WebKit::WebString mimeType = dataSource->response().mimeType();
+		// PRHFIXME: Do we do anything with these?
 	}
 }
 
@@ -762,9 +767,9 @@ void WebViewProxy::DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bo
 
 	if(dataSource)
 	{
-		std::string url = dataSource->GetRequest().GetURL().spec();
-		int statusCode = dataSource->GetResponse().GetHttpStatusCode();
-		std::wstring mimeType = ASCIIToWide(dataSource->GetResponse().GetMimeType());
+		std::string url = dataSource->request().url().spec();
+		int statusCode = dataSource->response().httpStatusCode();
+		std::wstring mimeType = dataSource->response().mimeType();
 
 		LOG(INFO) << "Committed Load for Frame. URL: " << url << ", Status Code: " << statusCode << ", Mime-Type: " << mimeType << ", Frame Name: " << frame->GetName();
 
@@ -1473,33 +1478,33 @@ void WebViewProxy::overrideIFrameWindow(const std::wstring& frameName)
 
 	if(frame)
 	{
-		scoped_ptr<WebRequest> request(WebRequest::Create(GURL("javascript:window.self = window.top;void(0);")));
-		frame->LoadRequest(request.get());
+		WebKit::WebURLRequest request(GURL("javascript:window.self = window.top;void(0);"));
+		frame->LoadRequest(request);
 	}
 }
 
 bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 {
-	WebRequestCachePolicy cache_policy;
+	WebKit::WebURLRequest::CachePolicy cache_policy;
 	if (reload) {
-	  cache_policy = WebRequestReloadIgnoringCacheData;
+		cache_policy = WebKit::WebURLRequest::ReloadIgnoringCacheData;
 	} else if (entry->GetPageID() != -1) {
-	  cache_policy = WebRequestReturnCacheDataElseLoad;
+	  cache_policy = WebKit::WebURLRequest::ReturnCacheDataElseLoad;
 	} else {
-	  cache_policy = WebRequestUseProtocolCachePolicy;
+	  cache_policy = WebKit::WebURLRequest::UseProtocolCachePolicy;
 	}
 
-	scoped_ptr<WebRequest> request(WebRequest::Create(entry->GetURL()));
-	request->SetCachePolicy(cache_policy);
+	WebKit::WebURLRequest request(entry->GetURL());
+	request.setCachePolicy(cache_policy);
 	// If we are reloading, then WebKit will use the state of the current page.
 	// Otherwise, we give it the state to navigate to.
 //	if (!reload)
-//	  request->SetHistoryState(entry->GetContentState());
+//	  request.SetHistoryState(entry->GetContentState());
 // PRHFIXME: SetHistoryState has been deleted
 
 	///////////////// SEE http://src.chromium.org/viewvc/chrome/trunk/src/webkit/tools/test_shell/test_shell.cc?r1=16747&r2=16746
 
-	view->GetMainFrame()->GetDataSource()->SetExtraData(new NavigationExtraRequestData(entry->GetPageID()));
+	view->GetMainFrame()->GetDataSource()->setExtraData(new NavigationExtraRequestData(entry->GetPageID()));
 
 	std::string username, password;
 	entry->GetAuthorizationCredentials(username, password);
@@ -1507,8 +1512,10 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 	if(username.length() || password.length())
 	{
 		std::string encodedCredentials;
-		if(net::Base64Encode(username + ":" + password, &encodedCredentials))
-			request->SetHttpHeaderValue("Authorization", "Basic " + encodedCredentials);
+		if(net::Base64Encode(username + ":" + password, &encodedCredentials)) {
+			std::string value = "Basic " + encodedCredentials;
+			request.setHTTPHeaderField(WebKit::WebString::fromUTF8("Authorization"), WebKit::WebString::fromUTF8(value));
+		}
 	}
 
 	// Get the right target frame for the entry.
@@ -1521,7 +1528,7 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 	if(entry->GetHTMLString().length())
 		frame->LoadHTMLString(entry->GetHTMLString(), entry->GetURL());
 	else
-		frame->LoadRequest(request.get());
+		frame->LoadRequest(request);
 
 	view->SetFocusedFrame(frame);
 
@@ -1531,7 +1538,7 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 void WebViewProxy::updateForCommittedLoad(WebFrame* frame, bool is_new_navigation)
 {
 	//PRHFIXME: old code used view->GetMainFrame() instead of frame. Why?
-	NavigationExtraRequestData* extra_data = static_cast<NavigationExtraRequestData*>(frame->GetDataSource()->GetExtraData());
+	NavigationExtraRequestData* extra_data = static_cast<NavigationExtraRequestData*>(frame->GetDataSource()->extraData());
 
 	if(is_new_navigation) 
 	{
@@ -1558,7 +1565,7 @@ void WebViewProxy::updateURL(WebFrame* frame)
 	WebDataSource* ds = frame->GetDataSource();
 	DCHECK(ds);
 
-	const WebRequest& request = ds->GetRequest();
+	const WebRequest& request = ds->request();
 
 	// Type is unused.
 	scoped_ptr<NavigationEntry> entry(new NavigationEntry);
@@ -1566,10 +1573,10 @@ void WebViewProxy::updateURL(WebFrame* frame)
 	// Bug 654101: the referrer will be empty on https->http transitions. It
 	// would be nice if we could get the real referrer from somewhere.
 	entry->SetPageID(pageID);
-	if (ds->HasUnreachableURL()) {
-		entry->SetURL(GURL(ds->GetUnreachableURL()));
+	if (ds->hasUnreachableURL()) {
+		entry->SetURL(GURL(ds->unreachableURL()));
 	} else {
-		entry->SetURL(GURL(request.GetURL()));
+		entry->SetURL(GURL(request.url()));
 	}
 
 	navController->DidNavigateToEntry(entry.release());

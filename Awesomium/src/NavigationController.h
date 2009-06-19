@@ -33,15 +33,18 @@
 #include "base/linked_ptr.h"
 #include "base/ref_counted.h"
 #include "googleurl/src/gurl.h"
-#include "webkit/glue/weburlrequest.h"
+#include "WebURLRequest.h"
 #include "WebHistoryItem.h"
 #include "WebViewProxy.h"
+#include "WebDataSource.h"
 
 /**
 * This NavigationController is largely based on Chromium's TestShell implementation
 * and has been extended to accomodate navigations with credentials and HTML-string only
 * navigations.
 */
+
+using WebKit::WebDataSource;
 
 // Associated with browser-initated navigations to hold tracking data.
 class NavigationExtraRequestData : public WebDataSource::ExtraData {
