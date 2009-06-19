@@ -1,0 +1,6 @@
+//
+// Prefix header for all source files of the 'Awesomium' target in the 'Awesomium' project.
+//
+
+#include <string>
+#include "base/basictypes.h"

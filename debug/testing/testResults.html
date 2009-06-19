@@ -1,0 +1,101 @@
+<html>
+<head>
+<style type="text/css">
+* {
+	font-family: sans-serif;
+}
+
+body {
+	background-color: #EEE;
+}
+
+#wrap
+{
+	margin: 0 auto;
+	width: 650px;
+	background-color: #FFF;
+	padding: 25px;
+}
+</style>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.flot.pack.js"></script>
+<script type="text/javascript" src="excanvas.pack.js"></script>
+<script type="text/javascript" src="TESTDATA_RenderSync_LoopCount.js"></script>
+<script type="text/javascript" src="TESTDATA_RenderSync_RenderCount.js"></script>
+<script type="text/javascript" src="TESTDATA_RenderAsync_LoopCount.js"></script>
+<script type="text/javascript" src="TESTDATA_RenderAsync_RenderCount.js"></script>
+<script type="text/javascript" src="TESTDATA_EvalJavascript.js"></script>
+<script type="text/javascript">
+$(function () {
+	function showTooltip(x, y, contents) {
+        $('<div id="tooltip">' + contents + '</div>').css( {
+            position: 'absolute',
+            display: 'none',
+            top: y + 5,
+            left: x + 5,
+			'font-size': '8pt',
+            border: '1px solid #fdd',
+			color: '#500',
+            padding: '2px',
+            'background-color': '#fee',
+            opacity: 0.80
+        }).appendTo("body").fadeIn(200);
+    }
+ 
+    var previousPoint = null;
+	
+	function onHoverPlotItem(event, pos, item) {
+		if (item) {
+			if (previousPoint != item.datapoint) {
+				previousPoint = item.datapoint;
+				
+				$("#tooltip").remove();
+				var x = item.datapoint[0].toFixed(2),
+					y = item.datapoint[1].toFixed(2);
+				
+				showTooltip(item.pageX, item.pageY, item.series.label + ": <b>" + y + "</b>");
+			}
+		}
+		else {
+			$("#tooltip").remove();
+			previousPoint = null;            
+		}
+    }
+	
+	$.plot($("#graph_renderSync"), [ { label: "Effective Loops-Per-Second", data: RenderSync_LoopCount }, 
+		{ label: "WebView Renders-Per-Second", data: RenderSync_RenderCount} ], { xaxis: { mode: "time" }, 
+		points: { show: true }, lines: { show: true }, grid: { hoverable: true, clickable: true } });
+		
+	$.plot($("#graph_renderAsync"), [ { label: "Effective Loops-Per-Second", data: RenderAsync_LoopCount }, 
+		{ label: "WebView Renders-Per-Second", data: RenderAsync_RenderCount} ], { xaxis: { mode: "time" }, 
+		points: { show: true }, lines: { show: true }, grid: { hoverable: true, clickable: true } });
+		
+	$.plot($("#graph_evalJavascript"), [ { label: "Synchronous JS Executions-Per-Second", data: EvalJavascript }]
+		, { xaxis: { mode: "time" }, points: { show: true }, lines: { show: true }, grid: { hoverable: true, clickable: true } });
+	
+    $("#graph_renderSync").bind("plothover", onHoverPlotItem);
+	$("#graph_renderAsync").bind("plothover", onHoverPlotItem);
+	$("#graph_evalJavascript").bind("plothover", onHoverPlotItem);
+ });
+</script>
+
+</head>
+<body>
+<div id="wrap">
+
+<h2>Test: Synchronous Render</h2>
+<div id="graph_renderSync" style="width: 650px; height: 300px"></div>
+
+<br/><br/>
+
+<h2>Test: Asynchronous Render</h2>
+<div id="graph_renderAsync" style="width: 650px; height: 300px"></div>
+
+<br/><br/>
+
+<h2>Test: Javascript Evaluation</h2>
+<div id="graph_evalJavascript" style="width: 650px; height: 300px"></div>
+
+</div>
+</body>
+</html>
