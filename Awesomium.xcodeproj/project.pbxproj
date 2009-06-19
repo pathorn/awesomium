@@ -7,18 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6915D60F0F55E6D7003511B7 /* ClientObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6020F55E6D7003511B7 /* ClientObject.h */; };
-		6915D6100F55E6D7003511B7 /* JSValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6030F55E6D7003511B7 /* JSValue.h */; };
-		6915D6110F55E6D7003511B7 /* PlatformUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6040F55E6D7003511B7 /* PlatformUtils.h */; };
-		6915D6120F55E6D7003511B7 /* PopupWidget.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6050F55E6D7003511B7 /* PopupWidget.h */; };
-		6915D6130F55E6D7003511B7 /* RenderBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6060F55E6D7003511B7 /* RenderBuffer.h */; };
+		6915D60F0F55E6D7003511B7 /* ClientObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6020F55E6D7003511B7 /* ClientObject.h */; settings = {ATTRIBUTES = (); }; };
+		6915D6100F55E6D7003511B7 /* JSValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6030F55E6D7003511B7 /* JSValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6915D6110F55E6D7003511B7 /* PlatformUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6040F55E6D7003511B7 /* PlatformUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6915D6120F55E6D7003511B7 /* PopupWidget.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6050F55E6D7003511B7 /* PopupWidget.h */; settings = {ATTRIBUTES = (); }; };
+		6915D6130F55E6D7003511B7 /* RenderBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6060F55E6D7003511B7 /* RenderBuffer.h */; settings = {ATTRIBUTES = (); }; };
 		6915D6140F55E6D7003511B7 /* RequestContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6070F55E6D7003511B7 /* RequestContext.h */; };
-		6915D6150F55E6D7003511B7 /* ResourceLoaderBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6080F55E6D7003511B7 /* ResourceLoaderBridge.h */; };
-		6915D6160F55E6D7003511B7 /* WebCore.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6090F55E6D7003511B7 /* WebCore.h */; };
+		6915D6150F55E6D7003511B7 /* ResourceLoaderBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6080F55E6D7003511B7 /* ResourceLoaderBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6915D6160F55E6D7003511B7 /* WebCore.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D6090F55E6D7003511B7 /* WebCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6915D6170F55E6D7003511B7 /* WebCoreProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D60A0F55E6D7003511B7 /* WebCoreProxy.h */; };
-		6915D6180F55E6D7003511B7 /* WebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D60B0F55E6D7003511B7 /* WebView.h */; };
+		6915D6180F55E6D7003511B7 /* WebView.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D60B0F55E6D7003511B7 /* WebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6915D6190F55E6D7003511B7 /* WebViewEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D60C0F55E6D7003511B7 /* WebViewEvent.h */; };
-		6915D61A0F55E6D7003511B7 /* WebViewListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D60D0F55E6D7003511B7 /* WebViewListener.h */; };
+		6915D61A0F55E6D7003511B7 /* WebViewListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D60D0F55E6D7003511B7 /* WebViewListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6915D61B0F55E6D7003511B7 /* WebViewProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D60E0F55E6D7003511B7 /* WebViewProxy.h */; };
 		6915D62F0F55E702003511B7 /* ClientObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6915D6210F55E702003511B7 /* ClientObject.cpp */; };
 		6915D6300F55E702003511B7 /* JSValue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6915D6220F55E702003511B7 /* JSValue.cpp */; };
@@ -33,7 +33,7 @@
 		6915D6390F55E702003511B7 /* WebView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6915D62B0F55E702003511B7 /* WebView.cpp */; };
 		6915D63A0F55E702003511B7 /* WebViewEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6915D62C0F55E702003511B7 /* WebViewEvent.cpp */; };
 		6915D63B0F55E702003511B7 /* WebViewProxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6915D62D0F55E702003511B7 /* WebViewProxy.cpp */; };
-		6915D63C0F55E702003511B7 /* WindowlessPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D62E0F55E702003511B7 /* WindowlessPlugin.h */; };
+		6915D63C0F55E702003511B7 /* WindowlessPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 6915D62E0F55E702003511B7 /* WindowlessPlugin.h */; settings = {ATTRIBUTES = (); }; };
 		6915D80C0F55E7F7003511B7 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6915D8060F55E7F7003511B7 /* Cocoa.framework */; };
 		6915D80D0F55E7F7003511B7 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6915D8070F55E7F7003511B7 /* QuartzCore.framework */; };
 		6915D80E0F55E7F7003511B7 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6915D8080F55E7F7003511B7 /* Security.framework */; };
@@ -80,13 +80,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = gtest;
-		};
-		6973F89A0F5C47C600848DA6 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = E45060E40EE87B86003BE099;
-			remoteInfo = app;
 		};
 		6973F89C0F5C47C600848DA6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -367,6 +360,41 @@
 			proxyType = 2;
 			remoteGlobalIDString = 21B3BBE31C9B54B4CF0E230F;
 			remoteInfo = icuuc;
+		};
+		CDB706420FEBA63F002FB857 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = CD9B9AE15018B33D4E91103A;
+			remoteInfo = chrome;
+		};
+		CDB706440FEBA63F002FB857 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = B113E7AE26E94A99AF570430;
+			remoteInfo = memory_test;
+		};
+		CDB706460FEBA63F002FB857 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 270C30ED19AFE5F4BEE1F273;
+			remoteInfo = url_fetch_test;
+		};
+		CDB706670FEBA63F002FB857 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8670F5C47C600848DA6 /* net.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 72ADE439CCCDF363849A60E7;
+			remoteInfo = fetch_client;
+		};
+		CDB706690FEBA63F002FB857 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8670F5C47C600848DA6 /* net.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = B7AB6DD4E12AED440441E503;
+			remoteInfo = fetch_server;
 		};
 		CDE712200FE5010900CDA83D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -756,7 +784,7 @@
 				CDE712D10FE5010B00CDA83D /* libplugin.a */,
 				6973F8A10F5C47C600848DA6 /* librenderer.a */,
 				CDE712D30FE5010B00CDA83D /* libutility.a */,
-				6973F89B0F5C47C600848DA6 /* Chromium.app */,
+				CDB706430FEBA63F002FB857 /* Chromium.app */,
 				69E754960F6A4782006A045E /* image_diff */,
 				CDE712D50FE5010B00CDA83D /* libtest_support_common.a */,
 				CDE712D70FE5010B00CDA83D /* libtest_support_ui.a */,
@@ -767,6 +795,8 @@
 				CDE712DB0FE5010B00CDA83D /* startup_tests */,
 				CDE712DD0FE5010B00CDA83D /* page_cycler_tests */,
 				CDE712DF0FE5010B00CDA83D /* tab_switching_test */,
+				CDB706450FEBA63F002FB857 /* memory_test */,
+				CDB706470FEBA63F002FB857 /* url_fetch_test */,
 				CDE712E10FE5010B00CDA83D /* browser_tests */,
 			);
 			name = Products;
@@ -826,6 +856,8 @@
 				69E754B80F6A4782006A045E /* tld_cleanup */,
 				69E754BA0F6A4782006A045E /* crash_cache */,
 				69E754BC0F6A4782006A045E /* libnet_test_support.a */,
+				CDB706680FEBA63F002FB857 /* fetch_client */,
+				CDB7066A0FEBA63F002FB857 /* fetch_server */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1092,13 +1124,6 @@
 			fileType = archive.ar;
 			path = libgtest.a;
 			remoteRef = 6973F8890F5C47C600848DA6 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6973F89B0F5C47C600848DA6 /* Chromium.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = Chromium.app;
-			remoteRef = 6973F89A0F5C47C600848DA6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		6973F89D0F5C47C600848DA6 /* libbrowser.a */ = {
@@ -1379,6 +1404,41 @@
 			fileType = archive.ar;
 			path = libicuuc.a;
 			remoteRef = 69E7580C0F6B8487006A045E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CDB706430FEBA63F002FB857 /* Chromium.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = Chromium.app;
+			remoteRef = CDB706420FEBA63F002FB857 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CDB706450FEBA63F002FB857 /* memory_test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = memory_test;
+			remoteRef = CDB706440FEBA63F002FB857 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CDB706470FEBA63F002FB857 /* url_fetch_test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = url_fetch_test;
+			remoteRef = CDB706460FEBA63F002FB857 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CDB706680FEBA63F002FB857 /* fetch_client */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = fetch_client;
+			remoteRef = CDB706670FEBA63F002FB857 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CDB7066A0FEBA63F002FB857 /* fetch_server */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = fetch_server;
+			remoteRef = CDB706690FEBA63F002FB857 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		CDE712210FE5010900CDA83D /* libgtestmain.a */ = {

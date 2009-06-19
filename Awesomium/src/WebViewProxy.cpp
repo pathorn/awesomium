@@ -34,6 +34,7 @@
 #include "base/path_service.h"
 #include "base/string_util.h"
 #include "webkit/glue/plugins/plugin_list.h"
+#include "webkit/glue/glue_util.h"
 #include "WebDataSource.h"
 #include "WebURLResponse.h"
 #include "net/base/base64.h"
@@ -47,6 +48,9 @@
 typedef WebKit::WebURLResponse WebResponse;
 typedef WebKit::WebURLRequest WebRequest;
 typedef WebKit::WebURLError WebError;
+
+// Defined in WebkitGlue.cpp:
+std::wstring stringToWide(const std::string &stringToConvert);
 
 WebViewProxy::WebViewProxy(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, Awesomium::WebView* parent)
 : view(0), width(width), height(height), canvas(0), isPopupsDirty(false), needsPainting(false), parent(parent), refCount(0), 
@@ -769,7 +773,8 @@ void WebViewProxy::DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bo
 	{
 		std::string url = dataSource->request().url().spec();
 		int statusCode = dataSource->response().httpStatusCode();
-		std::wstring mimeType = dataSource->response().mimeType();
+		std::string mimeTypeStr (webkit_glue::WebStringToStdString(dataSource->response().mimeType()));
+		std::wstring mimeType(stringToWide(mimeTypeStr));
 
 		LOG(INFO) << "Committed Load for Frame. URL: " << url << ", Status Code: " << statusCode << ", Mime-Type: " << mimeType << ", Frame Name: " << frame->GetName();
 
