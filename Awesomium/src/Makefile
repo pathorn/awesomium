@@ -1,5 +1,5 @@
 
-CHROMIUMDIR=/ext/prog/chromium
+CHROMIUMDIR=../../../chromium/chromium
 
 CHROMIUMLIBNAMES=libbreakpad_client.a libbrowser.a libbz2.a libcommon.a libwebcore.a libconvert_dict.a libdebugger.a libgmock.a libgoogleurl.a libgtest.a libharfbuzz.a libharfbuzz_interface.a libhunspell.a libmedia.a libnet_test_support.a libplugin.a libprinting.a librenderer.a libtest_shell_common.a libtest_support_common.a libutility.a libglue.a libnet.a libsdch.a libv8.a libv8_base.a libv8.a libwebkit.a libwebcore.a libskia.a libglue.a libwebcore.a libapp_base.a libbase.a libbase_gfx.a libevent.a libffmpeg.a libwtf.a libwebkit.a libsqlite3.a libicui18n.a libicuuc.a libicudata.a libxml2.a libmodp_b64.a libxslt.a libjpeg.a liblzma_sdk.a libpcre.a libpng.a libz.a
 CHROMIUMLIBS=$(addprefix $(CHROMIUMDIR)/src/sconsbuild/Debug/lib/, $(CHROMIUMLIBNAMES))

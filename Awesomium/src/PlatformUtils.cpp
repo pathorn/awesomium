@@ -30,6 +30,18 @@
 #endif
 
 #if SUPPRESS_LEAK_CHECKING
+
+#ifdef _WIN32
+typedef int64 int46_t;
+typedef uint64 uint64_t;
+typedef int32 int32_t;
+typedef uint32 uint32_t;
+typedef int16 int16_t;
+typedef uint16 uint16_t;
+typedef int8 int8_t;
+typedef uint8 uint8_t;
+#endif
+
 #include "wtf/RefCountedLeakCounter.h"
 #endif
 
@@ -63,7 +75,7 @@ void Impl::initWebCorePlatform()
 	InitWebCoreSystemInterface();
 	suppressLeakChecking();
 }
-#elif defined(_WIN32) || 1
+#else
 #include "AtomicString.h"
 #include "TextEncodingRegistry.h"
 void Impl::initWebCorePlatform()
@@ -72,6 +84,4 @@ void Impl::initWebCorePlatform()
 	WebCore::atomicCanonicalTextEncodingName("fake");
 	suppressLeakChecking();
 }
-#else
-
 #endif

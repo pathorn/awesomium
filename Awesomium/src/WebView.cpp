@@ -23,7 +23,7 @@
 	02110-1301 USA
 */
 
-#include "WebView.h"
+#include "../include/WebView.h"
 #include "WebViewProxy.h"
 #include "WebCore.h"
 #include "WebViewEvent.h"
