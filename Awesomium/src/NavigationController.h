@@ -34,7 +34,7 @@
 #include "base/ref_counted.h"
 #include "googleurl/src/gurl.h"
 #include "webkit/glue/weburlrequest.h"
-#include "webkit/glue/webhistoryitem.h"
+#include "WebHistoryItem.h"
 #include "WebViewProxy.h"
 
 /**
@@ -44,10 +44,10 @@
 */
 
 // Associated with browser-initated navigations to hold tracking data.
-class NavigationExtraRequestData : public WebRequest::ExtraData {
+class NavigationExtraRequestData : public WebDataSource::ExtraData {
  public:
   NavigationExtraRequestData(int32 pending_page_id)
-      : WebRequest::ExtraData(),
+	  : WebDataSource::ExtraData(),
         pending_page_id(pending_page_id),
         request_committed(false) {}
 
@@ -96,7 +96,7 @@ class NavigationEntry {
 	// while being able to deal with older versions.
 	void SetContentState(const std::string& state)
 	{
-		cached_history_item_ = NULL;  // invalidate our cached item
+//		cached_history_item_ = NULL;  // invalidate our cached item
 		state_ = state;
 	}
 
@@ -105,18 +105,18 @@ class NavigationEntry {
 	// Get the page id corresponding to the tab's state.
 	void SetPageID(int page_id) { page_id_ = page_id; }
 	int32 GetPageID() const { return page_id_; }
-
-	WebHistoryItem* GetHistoryItem() const
+/*
+	WebKit::WebHistoryItem* GetHistoryItem() const
 	{
 		if (!cached_history_item_)
 		{
 			NavigationExtraRequestData* extra_data = new NavigationExtraRequestData(GetPageID());
-			cached_history_item_ = WebHistoryItem::Create(GetURL(), 
+			cached_history_item_ = WebKit::WebHistoryItem::Create(GetURL(), 
 				GetTitle(), GetContentState(), extra_data);
 		}
 		return cached_history_item_;
 	}
-
+*/
 	const std::wstring& GetTargetFrame() const { return target_frame_; }
 
 	void GetAuthorizationCredentials(std::string& username, std::string& password)
@@ -138,7 +138,7 @@ private:
 	std::string authUsername, authPassword;
 	std::string htmlString;
 
-	mutable scoped_refptr<WebHistoryItem> cached_history_item_;
+//	mutable scoped_refptr<WebKit::WebHistoryItem> cached_history_item_;
 
 	std::wstring target_frame_;
 

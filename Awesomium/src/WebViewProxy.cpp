@@ -28,6 +28,8 @@
 #include "WebCoreProxy.h"
 #include "WindowlessPlugin.h"
 #include "WebViewEvent.h"
+#include "WebSize.h"
+#include "WebScreenInfo.h"
 #include "NavigationController.h"
 #include "base/path_service.h"
 #include "base/string_util.h"
@@ -36,6 +38,11 @@
 #include "webkit/glue/webresponse.h"
 #include "net/base/base64.h"
 #include <assert.h>
+
+#ifndef _WIN32
+// For gettimeofday.
+#include <sys/time.h>
+#endif
 
 WebViewProxy::WebViewProxy(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, Awesomium::WebView* parent)
 : view(0), width(width), height(height), canvas(0), isPopupsDirty(false), needsPainting(false), parent(parent), refCount(0), 
@@ -75,7 +82,7 @@ WebViewProxy::~WebViewProxy()
 void WebViewProxy::asyncStartup()
 {
 	view = ::WebView::Create(this, WebPreferences());
-	view->Resize(gfx::Size(width, height));
+	view->Resize(WebKit::WebSize(width, height));
 	clientObject = new ClientObject(parent);
 
 	if(enableAsyncRendering)
@@ -171,7 +178,7 @@ void WebViewProxy::mayBeginRender()
 	paint();
 }
 
-gfx::Rect WebViewProxy::render()
+WebKit::WebRect WebViewProxy::render()
 {
 	if(dirtyArea.IsEmpty() && !needsPainting && !isPopupsDirty)
 		return gfx::Rect();
@@ -270,15 +277,15 @@ gfx::Rect WebViewProxy::render()
 
 	if(popups.size())
 	{
-		gfx::Rect tempRect;
+		WebKit::WebRect tempRect;
 
 		for(std::vector<PopupWidget*>::iterator i = popups.begin(); i != popups.end(); i++)
 		{
 			(*i)->GetWindowRect(0, &tempRect);
-			if(!tempRect.IsEmpty())
+			if(!tempRect.isEmpty())
 			{
 				(*i)->renderToWebView(activeBuffer, isTransparent);
-				invalidArea = invalidArea.Union(tempRect);
+				invalidArea = invalidArea.Union(gfx::Rect(tempRect));
 			}
 		}
 
@@ -298,7 +305,7 @@ gfx::Rect WebViewProxy::render()
 
 	dirtyArea = gfx::Rect();
 
-	return invalidArea;
+	return WebKit::WebRect(invalidArea);
 }
 
 void WebViewProxy::copyRenderBuffer(unsigned char* destination, int destRowSpan, int destDepth)
@@ -346,35 +353,46 @@ void WebViewProxy::injectMouseMove(int x, int y)
 	mouseX = x;
 	mouseY = y;
 
-	handleMouseEvent(WebMouseEvent::MOUSE_MOVE, 0);
+	handleMouseEvent(WebKit::WebInputEvent::MouseMove, 0);
 }
 
 void WebViewProxy::injectMouseDown(short mouseButtonID)
 {
-	handleMouseEvent(WebMouseEvent::MOUSE_DOWN, mouseButtonID);
+	handleMouseEvent(WebKit::WebInputEvent::MouseDown, mouseButtonID);
 }
 
 void WebViewProxy::injectMouseUp(short mouseButtonID)
 {
-	handleMouseEvent(WebMouseEvent::MOUSE_UP, mouseButtonID);
+	handleMouseEvent(WebKit::WebInputEvent::MouseUp, mouseButtonID);
 }
 
 void WebViewProxy::injectMouseWheel(int scrollAmount)
 {
-	WebMouseWheelEvent event;
-	event.type = WebInputEvent::MOUSE_WHEEL;
+	WebKit::WebMouseWheelEvent event;
+	event.type = WebKit::WebInputEvent::MouseWheel;
 	event.x = mouseX;
 	event.y = mouseY;
-	event.global_x = mouseX;
-	event.global_y = mouseY;
+	event.windowX = mouseX; // PRHFIXME: Window vs Global position?
+	event.windowY = mouseY;
+	event.globalX = mouseX;
+	event.globalY = mouseY;
 #if defined(WIN32)
-	event.timestamp_sec = GetTickCount() / 1000.0;
+	event.timeStampSeconds = GetTickCount() / 1000.0;
+#else
+	{
+		timeval tv;
+		gettimeofday(&tv,NULL);
+		double timestamp = ((double)tv.tv_usec)/10000000.0;
+		timestamp += tv.tv_sec;
+		event.timeStampSeconds = timestamp;
+	}
 #endif
-	event.layout_test_click_count = 0;
-	event.button = WebMouseEvent::BUTTON_NONE;
-	event.delta_x = 0;
-	event.delta_y = scrollAmount;
-	event.scroll_by_page = false;
+	event.button = WebKit::WebMouseEvent::ButtonNone;
+	event.deltaX = 0; // PRHFIXME: want x and y scroll.
+	event.deltaY = scrollAmount;
+	event.wheelTicksX = 0; // PRHFIXME: want x and y scroll.
+	event.wheelTicksY = scrollAmount;
+	event.scrollByPage = false;
 
 	view->HandleInputEvent(&event);
 }
@@ -382,7 +400,11 @@ void WebViewProxy::injectMouseWheel(int scrollAmount)
 #if defined(WIN32)
 void WebViewProxy::injectKeyboardEvent(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	WebKeyboardEvent event(hwnd, message, wparam, lparam);
+	WebKit::WebKeyboardEvent event;
+//	event.isSystemKey = (message == WM_SYSKEYDOWN || message = WM_SYSKEYUP);
+	///////PRHFIXME: Fix API so we don't need to interact with this stuff directly!
+
+//	WebKit::WebKeyboardEvent event(hwnd, message, wparam, lparam);
 
 	view->HandleInputEvent(&event);
 
@@ -392,11 +414,14 @@ void WebViewProxy::injectKeyboardEvent(HWND hwnd, UINT message, WPARAM wparam, L
 #elif defined(__APPLE__)
 void WebViewProxy::injectKeyboardEvent(NSEvent* keyboardEvent)
 {
-	WebKeyboardEvent event(keyboardEvent);
+	WebKit::WebKeyboardEvent event;
+	// PRHFIXME: This function has the same issue as above.
+	// I guess keyboard input just won't work for now.
 	
 	view->HandleInputEvent(&event);
 }
 #endif
+// PRHFIXME Linux support not added yet!
 
 void WebViewProxy::cut()
 {
@@ -924,12 +949,6 @@ void WebViewProxy::AddMessageToConsole(::WebView* webview, const std::wstring& m
 		parent->nullifyFutureJSValueCallbacks();
 }
 
-// Notification of possible password forms to be filled/submitted by
-// the password manager
-void WebViewProxy::OnPasswordFormsSeen(::WebView* webview, const std::vector<PasswordForm>& forms)
-{
-}
-
 //
 void WebViewProxy::OnUnloadListenerChanged(::WebView* webview, WebFrame* webframe)
 {
@@ -1132,7 +1151,7 @@ GURL WebViewProxy::GetAlternateErrorPageURL(const GURL& failedURL, ErrorPageType
 
 // Returns the session history entry at a distance |offset| relative to the
 // current entry.  Returns NULL on failure.
-WebHistoryItem* WebViewProxy::GetHistoryEntryAtOffset(int offset)
+/*WebKit::WebHistoryItem* WebViewProxy::GetHistoryEntryAtOffset(int offset)
 {
 	NavigationEntry* entry = static_cast<NavigationEntry*>(navController->GetEntryAtOffset(offset));
 	
@@ -1141,7 +1160,7 @@ WebHistoryItem* WebViewProxy::GetHistoryEntryAtOffset(int offset)
 
 	return entry->GetHistoryItem();
 }
-
+*/
 // Asynchronously navigates to the history entry at the given offset.
 void WebViewProxy::GoToEntryAtOffsetAsync(int offset)
 {
@@ -1230,7 +1249,7 @@ gfx::NativeViewId WebViewProxy::GetContainingView(WebWidget* webwidget)
 }
 
 // Called when a region of the WebWidget needs to be re-painted.
-void WebViewProxy::DidInvalidateRect(WebWidget* webwidget, const gfx::Rect& rect)
+void WebViewProxy::DidInvalidateRect(WebWidget* webwidget, const WebKit::WebRect& rect)
 {
 	gfx::Rect clientRect(width, height);
 	dirtyArea = clientRect.Intersect(dirtyArea.Union(rect));
@@ -1244,7 +1263,7 @@ void WebViewProxy::DidInvalidateRect(WebWidget* webwidget, const gfx::Rect& rect
 
 // Called when a region of the WebWidget, given by clip_rect, should be
 // scrolled by the specified dx and dy amounts.
-void WebViewProxy::DidScrollRect(WebWidget* webwidget, int dx, int dy, const gfx::Rect& clip_rect)
+void WebViewProxy::DidScrollRect(WebWidget* webwidget, int dx, int dy, const WebKit::WebRect& clip_rect)
 {
 	if(parent && dirtyArea.IsEmpty() && !isPopupsDirty)
 		parent->setDirty();
@@ -1302,9 +1321,9 @@ void WebViewProxy::SetCursor(WebWidget* webwidget, const WebCursor& cursor)
 }
 
 // Returns the rectangle of the WebWidget in screen coordinates.
-void WebViewProxy::GetWindowRect(WebWidget* webwidget, gfx::Rect* rect)
+void WebViewProxy::GetWindowRect(WebWidget* webwidget, WebKit::WebRect* rect)
 {
-	*rect = gfx::Rect(width, height);
+	*rect = WebKit::WebRect(0, 0, width, height);
 }
 
 // This method is called to re-position the WebWidget on the screen.  The given
@@ -1313,17 +1332,17 @@ void WebViewProxy::GetWindowRect(WebWidget* webwidget, gfx::Rect* rect)
 // has been called.
 // TODO(darin): this is more of a request; does this need to take effect
 // synchronously?
-void WebViewProxy::SetWindowRect(WebWidget* webwidget, const gfx::Rect& rect)
+void WebViewProxy::SetWindowRect(WebWidget* webwidget, const WebKit::WebRect& rect)
 {
 }
 
 // Returns the rectangle of the window in which this WebWidget is embeded in.
-void WebViewProxy::GetRootWindowRect(WebWidget* webwidget, gfx::Rect* rect)
+void WebViewProxy::GetRootWindowRect(WebWidget* webwidget, WebKit::WebRect* rect)
 {
-	*rect = gfx::Rect(width, height);
+	*rect = WebKit::WebRect(0, 0, width, height);
 }
 
-void WebViewProxy::GetRootWindowResizerRect(WebWidget* webwidget, gfx::Rect* rect)
+void WebViewProxy::GetRootWindowResizerRect(WebWidget* webwidget, WebKit::WebRect* rect)
 {
 }
 
@@ -1340,54 +1359,53 @@ void WebViewProxy::RunModal(WebWidget* webwidget)
 {
 }
 
-bool WebViewProxy::IsHidden()
+bool WebViewProxy::IsHidden(WebWidget* webwidget)
 {
 	return false;
 }
 
-void WebViewProxy::handleMouseEvent(WebInputEvent::Type type, short buttonID)
+void WebViewProxy::handleMouseEvent(WebKit::WebInputEvent::Type type, short buttonID)
 {
 	int x = mouseX;
 	int y = mouseY;
 
-	WebMouseEvent event;
+	WebKit::WebMouseEvent event;
 	event.type = type;
 	event.x = x;
 	event.y = y;
-	event.global_x = x;
-	event.global_y = y;
+	event.globalX = x;
+	event.globalY = y;
 #if defined(WIN32)
-	event.timestamp_sec = GetTickCount() / 1000.0;
+	event.timeStampSeconds = GetTickCount() / 1000.0;
 #endif
-	event.layout_test_click_count = 0;
-	event.button = WebMouseEvent::BUTTON_NONE;
+	event.button = WebKit::WebMouseEvent::ButtonNone;
 
-	if(type == WebInputEvent::MOUSE_MOVE)
+	if(type == WebKit::WebInputEvent::MouseMove)
 	{
 		if(buttonState.leftDown)
-			event.button = WebMouseEvent::BUTTON_LEFT;
+			event.button = WebKit::WebMouseEvent::ButtonLeft;
 		else if(buttonState.middleDown)
-			event.button = WebMouseEvent::BUTTON_MIDDLE;
+			event.button = WebKit::WebMouseEvent::ButtonMiddle;
 		else if(buttonState.rightDown)
-			event.button = WebMouseEvent::BUTTON_RIGHT;
+			event.button = WebKit::WebMouseEvent::ButtonRight;
 	}
-	else if(type == WebInputEvent::MOUSE_DOWN || type == WebInputEvent::MOUSE_UP)
+	else if(type == WebKit::WebInputEvent::MouseDown || type == WebKit::WebInputEvent::MouseUp)
 	{
-		bool buttonChange = type == WebInputEvent::MOUSE_DOWN;
+		bool buttonChange = type == WebKit::WebInputEvent::MouseDown;
 
 		switch(buttonID)
 		{
 		case Awesomium::LEFT_MOUSE_BTN:
 			buttonState.leftDown = buttonChange;
-			event.button = WebMouseEvent::BUTTON_LEFT;
+			event.button = WebKit::WebMouseEvent::ButtonLeft;
 			break;
 		case Awesomium::MIDDLE_MOUSE_BTN:
 			buttonState.middleDown = buttonChange;
-			event.button = WebMouseEvent::BUTTON_MIDDLE;
+			event.button = WebKit::WebMouseEvent::ButtonMiddle;
 			break;
 		case Awesomium::RIGHT_MOUSE_BTN:
 			buttonState.rightDown = buttonChange;
-			event.button = WebMouseEvent::BUTTON_RIGHT;
+			event.button = WebKit::WebMouseEvent::ButtonRight;
 			break;
 		}
 	}
@@ -1410,7 +1428,7 @@ void WebViewProxy::handleMouseEvent(WebInputEvent::Type type, short buttonID)
 
 	view->HandleInputEvent(&event);
 
-	if(type != WebInputEvent::MOUSE_MOVE)
+	if(type != WebKit::WebInputEvent::MouseMove)
 		checkKeyboardFocus();
 }
 
@@ -1431,7 +1449,7 @@ void WebViewProxy::closePopup(PopupWidget* popup)
 	{
 		if((*i) == popup)
 		{
-			gfx::Rect winRect;
+			WebKit::WebRect winRect;
 			(*i)->GetWindowRect(0, &winRect);
 			DidInvalidateRect(0, winRect);
 
@@ -1475,10 +1493,13 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 	request->SetCachePolicy(cache_policy);
 	// If we are reloading, then WebKit will use the state of the current page.
 	// Otherwise, we give it the state to navigate to.
-	if (!reload)
-	  request->SetHistoryState(entry->GetContentState());
+//	if (!reload)
+//	  request->SetHistoryState(entry->GetContentState());
+// PRHFIXME: SetHistoryState has been deleted
 
-	request->SetExtraData(new NavigationExtraRequestData(entry->GetPageID()));
+	///////////////// SEE http://src.chromium.org/viewvc/chrome/trunk/src/webkit/tools/test_shell/test_shell.cc?r1=16747&r2=16746
+
+	view->GetMainFrame()->GetDataSource()->SetExtraData(new NavigationExtraRequestData(entry->GetPageID()));
 
 	std::string username, password;
 	entry->GetAuthorizationCredentials(username, password);
@@ -1509,9 +1530,8 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 
 void WebViewProxy::updateForCommittedLoad(WebFrame* frame, bool is_new_navigation)
 {
-	// Code duplicated from RenderView::DidCommitLoadForFrame.
-	const WebRequest& request = view->GetMainFrame()->GetDataSource()->GetRequest();
-	NavigationExtraRequestData* extra_data = static_cast<NavigationExtraRequestData*>(request.GetExtraData());
+	//PRHFIXME: old code used view->GetMainFrame() instead of frame. Why?
+	NavigationExtraRequestData* extra_data = static_cast<NavigationExtraRequestData*>(frame->GetDataSource()->GetExtraData());
 
 	if(is_new_navigation) 
 	{
@@ -1574,4 +1594,20 @@ void WebViewProxy::updateSessionHistory(WebFrame* frame)
 		return;
 
 	entry->SetContentState(state);
+}
+
+
+// PRHFIXME: Unimplemented:
+WebKit::WebScreenInfo WebViewProxy::GetScreenInfo(WebWidget * webwidget) {
+	WebKit::WebScreenInfo ret;
+	ret.availableRect = WebKit::WebRect(0,0,1024,768); // PRHFIXME: Huge hack, hardcode some screen size here.
+	ret.depth = 24;
+	ret.isMonochrome = false;
+	ret.depthPerComponent = 8;
+	ret.rect = WebKit::WebRect(0,0,1024,768);
+	return ret;
+}
+
+void WebViewProxy::ShowAsPopupWithItems(WebWidget *webwidget,const WebKit::WebRect &,int,int,const std::vector<WebMenuItem> &) {
+	Show(webwidget, NEW_POPUP); //PRHFIXME: what to do here?
 }

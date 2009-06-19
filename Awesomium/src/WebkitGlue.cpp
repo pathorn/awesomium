@@ -36,13 +36,8 @@
 #include "googleurl/src/gurl.h"
 #include "webkit/glue/scoped_clipboard_writer_glue.h"
 #include "SkBitmap.h"
-#if defined(_WIN32)
-//#include "webkit/glue/webkit_resources.h"
-#include <atlbase.h>
-#endif
 #include "base/string16.h"
 #include "base/string_util.h"
-#include "webkit/glue/screen_info.h"
 
 #if defined(_WIN32)
 #pragma warning( disable: 4996 )
@@ -151,7 +146,7 @@ string16 GetLocalizedString(int message_id)
 	*/
 }
 
-std::string GetDataResource(int resource_id)
+StringPiece GetDataResource(int resource_id)
 {
 	/*
 #if defined(__APPLE__)
@@ -273,11 +268,6 @@ bool DownloadUrl(const std::string& url, HWND caller_window)
 	return false;
 }
 #endif
-	
-ScreenInfo GetScreenInfo(gfx::NativeViewId window)
-{
-	return GetScreenInfoHelper(gfx::NativeViewFromId(window));
-}
 
 bool GetPluginFinderURL(std::string* plugin_finder_url)
 {

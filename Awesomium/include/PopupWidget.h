@@ -26,10 +26,12 @@
 #ifndef __POPUP_WIDGET_H__
 #define __POPUP_WIDGET_H__
 
+#include <string>
+#include "base/basictypes.h"
 #include "webkit/glue/webwidget.h"
 #include "webkit/glue/webwidget_delegate.h"
 #include "base/gfx/platform_canvas.h"
-#include "webkit/glue/webinputevent.h"
+#include "WebInputEvent.h"
 #include "base/gfx/rect.h"
 #include "RenderBuffer.h"
 
@@ -64,11 +66,11 @@ public:
 	gfx::NativeViewId GetContainingView(WebWidget* webwidget);
 
 	// Called when a region of the WebWidget needs to be re-painted.
-	void DidInvalidateRect(WebWidget* webwidget, const gfx::Rect& rect);
+	void DidInvalidateRect(WebWidget* webwidget, const WebKit::WebRect& rect);
 
 	// Called when a region of the WebWidget, given by clip_rect, should be
 	// scrolled by the specified dx and dy amounts.
-	void DidScrollRect(WebWidget* webwidget, int dx, int dy, const gfx::Rect& clip_rect);
+	void DidScrollRect(WebWidget* webwidget, int dx, int dy, const WebKit::WebRect& clip_rect);
 
 	// This method is called to instruct the window containing the WebWidget to
 	// show itself as the topmost window.  This method is only used after a
@@ -93,7 +95,7 @@ public:
 	void SetCursor(WebWidget* webwidget, const WebCursor& cursor);
 
 	// Returns the rectangle of the WebWidget in screen coordinates.
-	void GetWindowRect(WebWidget* webwidget, gfx::Rect* rect);
+	void GetWindowRect(WebWidget* webwidget, WebKit::WebRect* rect);
 
 	// This method is called to re-position the WebWidget on the screen.  The given
 	// rect is in screen coordinates.  The implementation may choose to ignore
@@ -101,15 +103,15 @@ public:
 	// has been called.
 	// TODO(darin): this is more of a request; does this need to take effect
 	// synchronously?
-	void SetWindowRect(WebWidget* webwidget, const gfx::Rect& rect);
+	void SetWindowRect(WebWidget* webwidget, const WebKit::WebRect& rect);
 
 	// Returns the rectangle of the window in which this WebWidget is embeded in.
-	void GetRootWindowRect(WebWidget* webwidget, gfx::Rect* rect);
+	void GetRootWindowRect(WebWidget* webwidget, WebKit::WebRect* rect);
 
 	// Returns the resizer rectangle of the window this WebWidget is in. This
 	// is used on Mac to determine if a scrollbar is over the in-window resize
 	// area at the bottom right corner.
-	void GetRootWindowResizerRect(WebWidget* webwidget, gfx::Rect* rect);
+	void GetRootWindowResizerRect(WebWidget* webwidget, WebKit::WebRect* rect);
 
 	// Keeps track of the necessary window move for a plugin window that resulted
 	// from a scroll operation.  That way, all plugin windows can be moved at the
@@ -124,7 +126,9 @@ public:
 	void AddRef();
 	void Release();
 
-	bool IsHidden();
+	WebKit::WebScreenInfo GetScreenInfo(WebWidget* webwidget);
+	bool IsHidden(WebWidget *);
+	void ShowAsPopupWithItems(WebWidget *,const WebKit::WebRect &,int,int,const std::vector<WebMenuItem> &);
 };
 
 #endif

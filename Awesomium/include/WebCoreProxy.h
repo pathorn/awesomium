@@ -59,9 +59,9 @@ public:
 	
 	WebKit::WebSandboxSupport* sandboxSupport();
 	
-	uint64_t visitedLinkHash(const char* canonicalURL, size_t length);
+	uint64 visitedLinkHash(const char* canonicalURL, size_t length);
 	
-	bool isLinkVisited(uint64_t linkHash);
+	bool isLinkVisited(uint64 linkHash);
 	
 	void setCookies(const WebKit::WebURL& url, const WebKit::WebURL& policy_url,
 					const WebKit::WebString& value);
@@ -70,9 +70,11 @@ public:
 	
 	void prefetchHostName(const WebKit::WebString&);
 	
-	WebKit::WebCString loadResource(const char* name);
+	WebKit::WebData loadResource(const char* name);
 	
 	WebKit::WebString defaultLocale();
+
+	WebKit::WebClipboard *clipboard();
 protected:
 	void asyncStartup();
 	
@@ -81,6 +83,9 @@ protected:
 	void pumpPluginMessages();
 	void pumpThrottledMessages();
 	void purgePluginMessages();
+
+	class Clipboard;
+	Clipboard *webclipboard;
 
 	base::Thread* coreThread;
 	bool pluginsEnabled;

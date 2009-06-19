@@ -4,6 +4,7 @@
 
 #include "RequestContext.h"
 
+#include "net/base/host_resolver.h"
 #include "net/base/cookie_monster.h"
 #include "net/proxy/proxy_service.h"
 #include "webkit/glue/webkit_glue.h"
@@ -29,15 +30,17 @@ void TestShellRequestContext::Init(
 	accept_language_ = "en-us,en";
 	accept_charset_ = "iso-8859-1,*,utf-8";
 	
+	/*
 	net::ProxyInfo proxy_info;
 	proxy_info.UseDirect();
 	proxy_service_ = net::ProxyService::Create(no_proxy ? &proxy_info : NULL);
-	
+	*/
+	proxy_service_ = net::ProxyService::CreateNull(); //PRHFIXME: Ideally shouldn't be null.
 	net::HttpCache *cache;
 	if (cache_path.empty()) {
-		cache = new net::HttpCache(proxy_service_, 0);
+		cache = new net::HttpCache(new net::HostResolver, proxy_service_, 0);
 	} else {
-		cache = new net::HttpCache(proxy_service_, cache_path, 0);
+		cache = new net::HttpCache(new net::HostResolver, proxy_service_, cache_path, 0);
 	}
 	cache->set_mode(cache_mode);
 	http_transaction_factory_ = cache;

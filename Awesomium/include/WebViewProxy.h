@@ -31,14 +31,18 @@
 #include "WebView.h"
 #include "ClientObject.h"
 #include <vector>
+#include "base/basictypes.h"
 #include "webkit/glue/webview.h"
 #include "webkit/glue/webframe.h"
 #include "webkit/glue/weburlrequest.h"
 #include "webkit/glue/webview_delegate.h"
 #include "webkit/glue/webpreferences.h"
+#include "webkit/glue/webdropdata.h"
 #include "webkit/glue/webcursor.h"
 #include "base/gfx/platform_canvas.h"
-#include "webkit/glue/webinputevent.h"
+#include "WebHTTPBody.h"
+#include "WebInputEvent.h"
+#include "WebHistoryItem.h"
 #include "SkCanvas.h"
 #include "base/gfx/rect.h"
 #include "base/message_loop.h"
@@ -79,7 +83,7 @@ class WebViewProxy : public WebViewDelegate
 	friend class NavigationController;
 
 	void closeAllPopups();
-	void handleMouseEvent(WebInputEvent::Type type, short buttonID);
+	void handleMouseEvent(WebKit::WebInputEvent::Type type, short buttonID);
 	void overrideIFrameWindow(const std::wstring& frameName);
 	bool navigate(NavigationEntry* entry, bool reload);
 	void updateForCommittedLoad(WebFrame* frame, bool is_new_navigation);
@@ -106,7 +110,7 @@ public:
 
 	void mayBeginRender();
 
-	gfx::Rect render();
+	WebKit::WebRect render();
 
 	void copyRenderBuffer(unsigned char* destination, int destRowSpan, int destDepth);
 
@@ -164,7 +168,7 @@ public:
 	WebPluginDelegate* CreatePluginDelegate(::WebView* webview, const GURL& url, const std::string& mime_type,
 		const std::string& clsid, std::string* actual_mime_type);
 
-	void OnMissingPluginStatus(WebPluginDelegate* delegate, int status);
+	void OnMissingPluginStatus(WebPluginDelegate* delegate_, int status);
 
 	void OpenURL(::WebView* webview, const GURL& url, WindowOpenDisposition disposition);
 
@@ -233,8 +237,6 @@ public:
 	void AddMessageToConsole(::WebView* webview, const std::wstring& message, unsigned int line_no, 
 		const std::wstring& source_id);
 
-	void OnPasswordFormsSeen(::WebView* webview, const std::vector<PasswordForm>& forms);
-
 	void OnUnloadListenerChanged(::WebView* webview, WebFrame* webframe);
 
 	void ShowModalHTMLDialog(const GURL& url, int width, int height, const std::string& json_arguments, 
@@ -297,7 +299,7 @@ public:
 
 	GURL GetAlternateErrorPageURL(const GURL& failedURL, ErrorPageType error_type);
 
-	WebHistoryItem* GetHistoryEntryAtOffset(int offset);
+//	WebKit::WebHistoryItem* GetHistoryEntryAtOffset(int offset);
 
 	void GoToEntryAtOffsetAsync(int offset);
 
@@ -322,9 +324,9 @@ public:
 
 	gfx::NativeViewId GetContainingView(WebWidget* webwidget);
 
-	void DidInvalidateRect(WebWidget* webwidget, const gfx::Rect& rect);
+	void DidInvalidateRect(WebWidget* webwidget, const WebKit::WebRect& rect);
 
-	void DidScrollRect(WebWidget* webwidget, int dx, int dy, const gfx::Rect& clip_rect);
+	void DidScrollRect(WebWidget* webwidget, int dx, int dy, const WebKit::WebRect& clip_rect);
 
 	void Show(WebWidget* webwidget, WindowOpenDisposition disposition);
 
@@ -336,19 +338,24 @@ public:
 
 	void SetCursor(WebWidget* webwidget, const WebCursor& cursor);
 
-	void GetWindowRect(WebWidget* webwidget, gfx::Rect* rect);
+	void GetWindowRect(WebWidget* webwidget, WebKit::WebRect* rect);
 
-	void SetWindowRect(WebWidget* webwidget, const gfx::Rect& rect);
+	void SetWindowRect(WebWidget* webwidget, const WebKit::WebRect& rect);
 
-	void GetRootWindowRect(WebWidget* webwidget, gfx::Rect* rect);
+	void GetRootWindowRect(WebWidget* webwidget, WebKit::WebRect* rect);
 
-	void GetRootWindowResizerRect(WebWidget* webwidget, gfx::Rect* rect);
+	void GetRootWindowResizerRect(WebWidget* webwidget, WebKit::WebRect* rect);
 
 	void DidMove(WebWidget* webwidget, const WebPluginGeometry& move);
 
 	void RunModal(WebWidget* webwidget);
 
-	bool IsHidden();
+	bool IsHidden(WebWidget * webwidget);
+
+	WebKit::WebScreenInfo GetScreenInfo(WebWidget * webwidget);
+
+	// PRHFIXME: unimplemented
+	void ShowAsPopupWithItems(WebWidget *,const WebKit::WebRect &,int,int,const std::vector<WebMenuItem> &);
 
 };
 

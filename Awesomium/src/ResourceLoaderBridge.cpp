@@ -37,11 +37,13 @@
 #include "base/time.h"
 #include "base/thread.h"
 #include "base/waitable_event.h"
+#include "base/timer.h"
 #include "net/base/cookie_monster.h"
 #include "net/base/io_buffer.h"
 #include "net/base/load_flags.h"
 #include "net/base/net_util.h"
 #include "net/base/upload_data.h"
+#include "net/base/net_errors.h"
 #include "net/http/http_response_headers.h"
 #include "net/proxy/proxy_service.h"
 #include "net/url_request/url_request.h"
@@ -205,7 +207,7 @@ namespace {
 		void AsyncStart(RequestParams* params) {
 			request_.reset(new URLRequest(params->url, this));
 			request_->set_method(params->method);
-			request_->set_policy_url(params->policy_url);
+			request_->set_first_party_for_cookies(params->policy_url);
 			request_->set_referrer(params->referrer.spec());
 			request_->SetExtraRequestHeaders(params->headers);
 			request_->set_load_flags(params->load_flags);
@@ -453,13 +455,17 @@ namespace {
 				params_->upload = new net::UploadData();
 			params_->upload->AppendBytes(data, data_len);
 		}
+
+		virtual void SetUploadIdentifier(int64 id) {
+			// FIXME: unimnplemented yet.
+		}
 		
-		virtual void AppendFileRangeToUpload(const std::wstring& file_path,
+		virtual void AppendFileRangeToUpload(const FilePath& file_path,
 											 uint64 offset, uint64 length) {
 			DCHECK(params_.get());
 			if (!params_->upload)
 				params_->upload = new net::UploadData();
-			params_->upload->AppendFileRange(file_path, offset, length);
+			params_->upload->AppendFileRange(FilePath(file_path), offset, length);
 		}
 		
 		virtual bool Start(Peer* peer) {
@@ -550,16 +556,18 @@ namespace webkit_glue {
 	
 	// factory function
 	ResourceLoaderBridge* ResourceLoaderBridge::Create(
-													   WebFrame* webframe,
 													   const std::string& method,
 													   const GURL& url,
 													   const GURL& policy_url,
 													   const GURL& referrer,
+													   const std::string& frame_origin,
+                                                       const std::string& main_frame_origin,
 													   const std::string& headers,
 													   int load_flags,
 													   int origin_pid,
 													   ResourceType::Type request_type,
-													   bool mixed_contents) {
+													   int app_cache_context_id,
+													   int routing_id) {
 		return new ResourceLoaderBridgeImpl(method, url, policy_url, referrer,
 											headers, load_flags);
 	}

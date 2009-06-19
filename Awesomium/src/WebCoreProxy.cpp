@@ -28,6 +28,8 @@
 #include "ResourceLoaderBridge.h"
 #include "RequestContext.h"
 #include "base/icu_util.h"
+#include "WebData.h"
+#include "WebClipboard.h"
 #include <assert.h>
 #include "base/string_util.h"
 #if defined(WIN32)
@@ -38,6 +40,35 @@ StringPiece NetResourceProvider(int key);
 #include <Carbon/Carbon.h>
 void initMacApplication();
 #endif
+
+// PRHFIXME: Unimplemented.
+class WebCoreProxy::Clipboard: public WebKit::WebClipboard {
+	WebCoreProxy *proxy;
+public:
+	Clipboard(WebCoreProxy *proxy) : proxy(proxy) {
+	}
+	typedef WebKit::WebString WebString;
+	bool isFormatAvailable(Format fmt) {
+		return false;
+	}
+	WebString readPlainText() {
+		return WebString();
+	}
+	WebString readHTML(WebKit::WebURL*weburl) {
+		*weburl = WebKit::WebURL();
+		return WebString();
+	}
+	void writeHTML(
+            const WebString& htmlText, const WebKit::WebURL&,
+			const WebString& plainText, bool writeSmartPaste) {
+	}
+	virtual void writeURL(
+			const WebKit::WebURL&, const WebString& title) {
+	}
+	virtual void writeImage(
+			const WebKit::WebImage&, const WebKit::WebURL&, const WebString& title) {
+	}
+};
 
 WebCoreProxy::WebCoreProxy(base::Thread* coreThread, bool pluginsEnabled) : coreThread(coreThread),
 	pluginsEnabled(pluginsEnabled), pauseRequestEvent(false, false), threadWaitEvent(false, false)
@@ -58,6 +89,7 @@ WebCoreProxy::WebCoreProxy(base::Thread* coreThread, bool pluginsEnabled) : core
 			LOG(ERROR) << "ICU failed initialization! Have you forgotten to include the DLL?";
 		}
 	}
+	webclipboard = new Clipboard(this);
 
 	WebKit::initialize(this);
 }
@@ -115,12 +147,12 @@ WebKit::WebSandboxSupport* WebCoreProxy::sandboxSupport()
     return NULL;
 }
 
-uint64_t WebCoreProxy::visitedLinkHash(const char* canonicalURL, size_t length)
+uint64 WebCoreProxy::visitedLinkHash(const char* canonicalURL, size_t length)
 {
     return 0;
 }
 
-bool WebCoreProxy::isLinkVisited(uint64_t linkHash)
+bool WebCoreProxy::isLinkVisited(uint64 linkHash)
 {
     return false;
 }
@@ -140,7 +172,11 @@ void WebCoreProxy::prefetchHostName(const WebKit::WebString&)
 {
 }
 
-WebKit::WebCString WebCoreProxy::loadResource(const char* name)
+WebKit::WebClipboard *WebCoreProxy::clipboard() {
+	return webclipboard;
+}
+
+WebKit::WebData WebCoreProxy::loadResource(const char* name)
 {
     if (!strcmp(name, "deleteButton")) {
 		// Create a red 30x30 square.
@@ -156,7 +192,7 @@ WebKit::WebCString WebCoreProxy::loadResource(const char* name)
 		"\x18\x50\xb9\x33\x47\xf9\xa8\x01\x32\xd4\xc2\x03\x00\x33\x84\x0d"
 		"\x02\x3a\x91\xeb\xa5\x00\x00\x00\x00\x49\x45\x4e\x44\xae\x42\x60"
 		"\x82";
-		return WebKit::WebCString(red_square, arraysize(red_square));
+		return WebKit::WebData(red_square, arraysize(red_square));
     }
     return webkit_glue::WebKitClientImpl::loadResource(name);
 }

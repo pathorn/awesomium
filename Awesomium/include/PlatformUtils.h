@@ -32,10 +32,12 @@
 #	else
 #		define _OSMExport __declspec( dllimport )
 #	endif
-#elif defined(__APPLE__)
-#	define _OSMExport __attribute__((visibility("default")))
 #else
+#   if defined(__GNUC__) && __GNUC__ >= 4
+#	define _OSMExport __attribute__ ((visibility("default")))
+#   else
 #	define _OSMExport
+#   endif
 #endif
 
 namespace Impl {

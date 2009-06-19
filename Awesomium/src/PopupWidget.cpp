@@ -25,6 +25,9 @@
 
 #include "PopupWidget.h"
 #include "WebViewProxy.h"
+#include "WebSize.h"
+#include "WebRect.h"
+#include "WebScreenInfo.h"
 
 PopupWidget::PopupWidget(WebViewProxy* parent) : parent(parent), refCount(0), canvas(0)
 {
@@ -55,7 +58,7 @@ void PopupWidget::renderToWebView(Awesomium::RenderBuffer* context, bool isParen
 	if(!dirtyArea.IsEmpty())
 	{
 		widget->Layout();
-		widget->Paint(canvas, dirtyArea);
+		widget->Paint(canvas, WebKit::WebRect(dirtyArea));
 		dirtyArea = gfx::Rect();
 	}
 
@@ -94,19 +97,19 @@ gfx::NativeViewId PopupWidget::GetContainingView(WebWidget* webwidget)
 }
 
 // Called when a region of the WebWidget needs to be re-painted.
-void PopupWidget::DidInvalidateRect(WebWidget* webwidget, const gfx::Rect& rect)
+void PopupWidget::DidInvalidateRect(WebWidget* webwidget, const WebKit::WebRect& rect)
 {
 	gfx::Rect clientRect(windowRect.width(), windowRect.height());
-	dirtyArea = clientRect.Intersect(dirtyArea.Union(rect));
+	dirtyArea = clientRect.Intersect(dirtyArea.Union(gfx::Rect(rect)));
 	parent->invalidatePopups();
 }
 
 // Called when a region of the WebWidget, given by clip_rect, should be
 // scrolled by the specified dx and dy amounts.
-void PopupWidget::DidScrollRect(WebWidget* webwidget, int dx, int dy, const gfx::Rect& clip_rect)
+void PopupWidget::DidScrollRect(WebWidget* webwidget, int dx, int dy, const WebKit::WebRect& clip_rect)
 {
-	gfx::Size size = widget->GetSize();
-	dirtyArea = gfx::Rect(size.width(), size.height());
+	WebKit::WebSize size = widget->GetSize();
+	dirtyArea = gfx::Rect(size.width, size.height);
 	parent->invalidatePopups();
 }
 
@@ -138,9 +141,9 @@ void PopupWidget::Blur(WebWidget* webwidget) { widget->SetFocus(false); }
 void PopupWidget::SetCursor(WebWidget* webwidget, const WebCursor& cursor) {}
 
 // Returns the rectangle of the WebWidget in screen coordinates.
-void PopupWidget::GetWindowRect(WebWidget* webwidget, gfx::Rect* rect)
+void PopupWidget::GetWindowRect(WebWidget* webwidget, WebKit::WebRect* rect)
 {
-	*rect = windowRect;
+	*rect = WebKit::WebRect(windowRect);
 }
 
 // This method is called to re-position the WebWidget on the screen.  The given
@@ -149,20 +152,20 @@ void PopupWidget::GetWindowRect(WebWidget* webwidget, gfx::Rect* rect)
 // has been called.
 // TODO(darin): this is more of a request; does this need to take effect
 // synchronously?
-void PopupWidget::SetWindowRect(WebWidget* webwidget, const gfx::Rect& rect)
+void PopupWidget::SetWindowRect(WebWidget* webwidget, const WebKit::WebRect& rect)
 {
-	windowRect = rect;
-	widget->Resize(gfx::Size(rect.width(), rect.height()));
-	dirtyArea = dirtyArea.Union(gfx::Rect(rect.width(), rect.height()));
+	windowRect = gfx::Rect(rect);
+	widget->Resize(WebKit::WebSize(rect.width, rect.height));
+	dirtyArea = dirtyArea.Union(gfx::Rect(rect.width, rect.height));
 }
 
 // Returns the rectangle of the window in which this WebWidget is embeded in.
-void PopupWidget::GetRootWindowRect(WebWidget* webwidget, gfx::Rect* rect)
+void PopupWidget::GetRootWindowRect(WebWidget* webwidget, WebKit::WebRect* rect)
 {
 	parent->GetWindowRect(0, rect);
 }
 
-void PopupWidget::GetRootWindowResizerRect(WebWidget* webwidget, gfx::Rect* rect)
+void PopupWidget::GetRootWindowResizerRect(WebWidget* webwidget, WebKit::WebRect* rect)
 {
 }
 
@@ -191,7 +194,30 @@ void PopupWidget::Release()
 		delete this;
 }
 
-bool PopupWidget::IsHidden()
+WebKit::WebScreenInfo PopupWidget::GetScreenInfo(WebWidget* webwidget) {
+	WebKit::WebScreenInfo ret;
+	ret.availableRect = WebKit::WebRect(0,0,1024,768); // PRHFIXME: Huge hack, hardcode some screen size here.
+	ret.depth = 24;
+	ret.isMonochrome = false;
+	ret.depthPerComponent = 8;
+	ret.rect = WebKit::WebRect(0,0,1024,768);
+	return ret;
+}
+
+  // Used for displaying HTML popup menus on Mac OS X (other platforms will use
+  // Show() above). |bounds| represents the positioning on the screen (in WebKit
+  // coordinates, origin at the top left corner) of the button that will display
+  // the menu. It will be used, along with |item_height| (which refers to the
+  // size of each entry in the menu), to position the menu on the screen.
+  // |selected_index| indicates the menu item that should be drawn as selected
+  // when the menu initially is displayed. |items| contains information about
+  // each of the entries in the popup menu, such as the type (separator, option,
+  // group), the text representation and the item's enabled status.
+void PopupWidget::ShowAsPopupWithItems(WebWidget *webwidget,const WebKit::WebRect &,int,int,const std::vector<WebMenuItem> &) {
+	Show(webwidget, NEW_POPUP); // PRHFIXME: for now.
+}
+
+bool PopupWidget::IsHidden(WebWidget *)
 {
 	return false;
 }

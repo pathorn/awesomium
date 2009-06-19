@@ -26,14 +26,12 @@
 #ifndef __WINDOWLESS_PLUGIN_H__
 #define __WINDOWLESS_PLUGIN_H__
 
-#if defined(_WIN32) || defined(__APPLE__)
-
 #include "webkit/glue/webplugin_delegate.h"
 #include "webkit/glue/webplugin.h"
 #include "webkit/glue/plugins/plugin_instance.h"
 #include "webkit/glue/plugins/plugin_lib.h"
 #include "webkit/glue/plugins/plugin_stream_url.h"
-#include "webkit/glue/webinputevent.h"
+#include "WebInputEvent.h"
 #include "base/message_loop.h"
 #include "base/timer.h"
 #include "WebCore.h"
@@ -124,8 +122,8 @@ public:
 		* our own structure, modifying/appending the wmode, and passing the result to PluginInstance::Start.
 		*/
 
-		char** keys = new char*[argc+1];
-		char** vals = new char*[argc+1];
+		const char** keys = new const char*[argc+1];
+		const char** vals = new const char*[argc+1];
 
 		bool hasNoWMode = true;
 
@@ -166,10 +164,10 @@ public:
 #if defined(_WIN32)
 		pluginInstance->set_window_handle(0);
 #endif
-		plugin->SetWindow(0, 0);
+		plugin->SetWindow(0);
 
 		NPAPI::PluginInstance* oldInstance = NPAPI::PluginInstance::SetInitializingInstance(pluginInstance);
-		bool startResult = pluginInstance->Start(url, keys, vals, argc+1, load_manually);
+		bool startResult = pluginInstance->Start(url, const_cast<char**>(keys), const_cast<char**>(vals), argc+1, load_manually);
 
 		NPAPI::PluginInstance::SetInitializingInstance(oldInstance);
 		pluginURL = url.spec();
@@ -356,7 +354,7 @@ public:
 	void FlushGeometryUpdates() {}
 
 	// The result of the script execution is returned via this function.
-	void SendJavaScriptStream(const std::string& url, const std::wstring& result,  bool success, bool notify_needed, int notify_data)
+	void SendJavaScriptStream(const std::string& url, const std::wstring& result,  bool success, bool notify_needed, intptr_t notify_data)
 	{
 		pluginInstance->SendJavaScriptStream(url, result, success, notify_needed, notify_data);
 	}
@@ -395,7 +393,7 @@ public:
 	void InstallMissingPlugin() {}
 
 	// Creates a WebPluginResourceClient instance and returns the same.
-	WebPluginResourceClient* CreateResourceClient(int resource_id, const std::string &url, bool notify_needed, void *notify_data, void* existing_stream)
+	WebPluginResourceClient* CreateResourceClient(int resource_id, const std::string &url, bool notify_needed, intptr_t notify_data, intptr_t existing_stream)
 	{
 		if(existing_stream)
 		{
@@ -408,16 +406,21 @@ public:
 		if(notify_needed)
 			pluginInstance->SetURLLoadData(GURL(url.c_str()), notify_data);
 
-		return pluginInstance->CreateStream(resource_id, url, "", notify_needed, notify_data);
+		return pluginInstance->CreateStream(resource_id, url, "", notify_needed, (void*)notify_data);
 	}
 
 	// Notifies the delegate about a Get/Post URL request getting routed
-	void URLRequestRouted(const std::string&url, bool notify_needed, void* notify_data)
+	void URLRequestRouted(const std::string&url, bool notify_needed, intptr_t notify_data)
 	{
 		if(notify_needed)
 			pluginInstance->SetURLLoadData(GURL(url.c_str()), notify_data);
 	}
-	
+
+	bool HandleInputEvent(const WebKit::WebInputEvent &,WebCursor *) {
+		// PRHFIXME: What to do here? 
+		return false;
+	}
+
 	void updatePlugin()
 	{
 #if defined(__APPLE__)
@@ -442,7 +445,5 @@ public:
 #endif
 	}
 };
-
-#endif
 
 #endif

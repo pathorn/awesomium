@@ -26,6 +26,7 @@
 #ifndef __WEBCORE_H__
 #define __WEBCORE_H__
 
+#include "PlatformUtils.h"
 #include "WebView.h"
 #include <queue>
 #include <vector>

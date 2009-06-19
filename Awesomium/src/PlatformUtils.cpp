@@ -63,7 +63,7 @@ void Impl::initWebCorePlatform()
 	InitWebCoreSystemInterface();
 	suppressLeakChecking();
 }
-#elif defined(_WIN32)
+#elif defined(_WIN32) || 1
 #include "AtomicString.h"
 #include "TextEncodingRegistry.h"
 void Impl::initWebCorePlatform()
@@ -72,4 +72,6 @@ void Impl::initWebCorePlatform()
 	WebCore::atomicCanonicalTextEncodingName("fake");
 	suppressLeakChecking();
 }
+#else
+
 #endif
