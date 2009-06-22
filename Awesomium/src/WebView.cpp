@@ -28,6 +28,7 @@
 #include "WebCore.h"
 #include "WebViewEvent.h"
 
+#include "base/string_util.h"
 #include "base/waitable_event.h"
 #include "base/thread.h"
 #include "base/lock.h"
@@ -234,9 +235,21 @@ void Awesomium::WebView::injectMouseUp(Awesomium::MouseButton button)
 	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::injectMouseUp, (short)button));
 }
 
-void Awesomium::WebView::injectMouseWheel(int scrollAmount)
+void Awesomium::WebView::injectMouseWheelXY(int scrollAmountX, int scrollAmountY)
 {
-	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::injectMouseWheel, scrollAmount));
+	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::injectMouseWheel, scrollAmountX, scrollAmountY));
+}
+
+void Awesomium::WebView::injectKeyEvent(bool press, int modifiers, int windowsCode, int nativeCode)
+{
+	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::injectKeyEvent, press, modifiers, windowsCode, nativeCode));
+}
+
+void Awesomium::WebView::injectTextEvent(std::wstring text)
+{
+	// Webkit uses utf-16...
+	string16 output = WideToUTF16(text);
+	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::injectTextEvent, output));
 }
 
 #if defined(_WIN32)

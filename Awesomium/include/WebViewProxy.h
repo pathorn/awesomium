@@ -63,6 +63,7 @@ class WebViewProxy : public WebViewDelegate
 	skia::PlatformCanvas* canvas;
 	int mouseX, mouseY;
 	struct { bool leftDown, middleDown, rightDown; } buttonState;	
+	int modifiers;
 	::WebView* view;
 	Awesomium::WebView* parent;
 	std::vector<PopupWidget*> popups;
@@ -90,6 +91,7 @@ class WebViewProxy : public WebViewDelegate
 	void updateForCommittedLoad(WebFrame* frame, bool is_new_navigation);
 	void updateURL(WebFrame* frame);
 	void updateSessionHistory(WebFrame* frame);
+	template <class EventType> void initializeWebEvent(EventType &event, WebKit::WebInputEvent::Type type);
 public:
 
 	WebViewProxy(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, Awesomium::WebView* parent);
@@ -124,8 +126,10 @@ public:
 	void injectMouseMove(int x, int y);
 	void injectMouseDown(short mouseButtonID);
 	void injectMouseUp(short mouseButtonID);
-	void injectMouseWheel(int scrollAmount);
+	void injectMouseWheel(int scrollAmountX, int scrollAmountY);
 
+	void injectKeyEvent(bool press, int modifiers, int windowsCode, int nativeCode);
+	void injectTextEvent(string16 text);
 #if defined(_WIN32)
 	void injectKeyboardEvent(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 #elif defined(__APPLE__)
@@ -162,24 +166,14 @@ public:
 	* The following functions are inherited from WebViewDelegate
 	*/
 
-	::WebView* CreateWebView(::WebView* webview, bool user_gesture);
+	::WebView* CreateWebView(::WebView* webview, bool user_gesture, const GURL& creator_url);
 
 	WebWidget* CreatePopupWidget(::WebView* webview, bool focus_on_show);
 
 	WebPluginDelegate* CreatePluginDelegate(::WebView* webview, const GURL& url, const std::string& mime_type,
 		const std::string& clsid, std::string* actual_mime_type);
 
-	void OnMissingPluginStatus(WebPluginDelegate* delegate_, int status);
-
-	void OpenURL(::WebView* webview, const GURL& url, WindowOpenDisposition disposition);
-
-	void ReportFindInPageMatchCount(int count, int request_id, bool final_update);
-
-	void ReportFindInPageSelection(int request_id, int active_match_ordinal, const gfx::Rect& selection_rect);
-
-	const SkBitmap* GetPreloadedResourceBitmap(int resource_id);
-
-	bool WasOpenedByUserGesture(::WebView* webview) const;
+	void OpenURL(::WebView* webview, const GURL& url, const GURL& referrer, WindowOpenDisposition disposition);
 
 	void DidStartLoading(::WebView* webview);
 
@@ -187,8 +181,13 @@ public:
 
 	void WindowObjectCleared(WebFrame* webframe);
 
-	WindowOpenDisposition DispositionForNavigationAction(::WebView* webview, WebFrame* frame, 
-		const WebKit::WebURLRequest* request, WebKit::WebNavigationType type, WindowOpenDisposition disposition, bool is_redirect);
+	WindowOpenDisposition DispositionForNavigationAction(
+      ::WebView* webview,
+      WebFrame* frame,
+      const WebKit::WebURLRequest& request,
+      WebKit::WebNavigationType type,
+      WindowOpenDisposition disposition,
+      bool is_redirect);
 
 	void DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame* frame, NavigationGesture gesture);
 
@@ -196,7 +195,7 @@ public:
 
 	void DidFailProvisionalLoadWithError(::WebView* webview, const WebKit::WebURLError& error, WebFrame* frame);
 
-	void LoadNavigationErrorPage(WebFrame* frame, const WebKit::WebURLRequest* failed_request, const WebKit::WebURLError& error,
+	void LoadNavigationErrorPage(WebFrame* frame, const WebKit::WebURLRequest& failed_request, const WebKit::WebURLError& error,
 		const std::string& html, bool replace);
 
 	void DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bool is_new_navigation);
@@ -238,29 +237,30 @@ public:
 	void AddMessageToConsole(::WebView* webview, const std::wstring& message, unsigned int line_no, 
 		const std::wstring& source_id);
 
-	void OnUnloadListenerChanged(::WebView* webview, WebFrame* webframe);
-
 	void ShowModalHTMLDialog(const GURL& url, int width, int height, const std::string& json_arguments, 
 		std::string* json_retval);
 
-	void RunJavaScriptAlert(::WebView* webview, const std::wstring& message);
+	void RunJavaScriptAlert(WebFrame* webframe, const std::wstring& message);
 
-	bool RunJavaScriptConfirm(::WebView* webview, const std::wstring& message);
+	bool RunJavaScriptConfirm(WebFrame* webframe, const std::wstring& message);
 
-	bool RunJavaScriptPrompt(::WebView* webview, const std::wstring& message, const std::wstring& default_value, 
+	bool RunJavaScriptPrompt(WebFrame* webframe, const std::wstring& message, const std::wstring& default_value, 
 		std::wstring* result);
 
-	bool RunBeforeUnloadConfirm(::WebView* webview, const std::wstring& message);
+	bool RunBeforeUnloadConfirm(WebFrame* webframe, const std::wstring& message);
 
 	void UpdateTargetURL(::WebView* webview, const GURL& url);
 
-	void RunFileChooser(const std::wstring& initial_filename, WebFileChooserCallback* file_chooser);
+	void RunFileChooser(bool multi_select,
+                              const string16& title,
+                              const FilePath& initial_filename,
+                              WebFileChooserCallback* file_chooser);
 
 	void ShowContextMenu(::WebView* webview, ContextNode node, int x, int y, const GURL& link_url,
 		const GURL& image_url, const GURL& page_url, const GURL& frame_url, const std::wstring& selection_text, 
-		const std::wstring& misspelled_word, int edit_flags, const std::string& frame_encoding);
+		const std::wstring& misspelled_word, int edit_flags, const std::string& security_info, const std::string& frame_encoding);
 
-	void StartDragging(::WebView* webview, const WebDropData& drop_data);
+	void StartDragging(::WebView* webview, const WebKit::WebDragData& drop_data);
 
 	void TakeFocus(::WebView* webview, bool reverse);
 
@@ -291,12 +291,6 @@ public:
 	void UserMetricsRecordComputedAction(const std::wstring& action);
 
 	void DidDownloadImage(int id, const GURL& image_url, bool errored, const SkBitmap& image);
-
-	enum ErrorPageType
-	{
-		DNS_ERROR,
-		HTTP_404
-	};
 
 	GURL GetAlternateErrorPageURL(const GURL& failedURL, ErrorPageType error_type);
 
@@ -353,7 +347,7 @@ public:
 
 	bool IsHidden(WebWidget * webwidget);
 
-	WebKit::WebScreenInfo GetScreenInfo(WebWidget * webwidget);
+	WebKit::WebScreenInfo GetScreenInfo(WebWidget *);
 
 	// PRHFIXME: unimplemented
 	void ShowAsPopupWithItems(WebWidget *,const WebKit::WebRect &,int,int,const std::vector<WebMenuItem> &);

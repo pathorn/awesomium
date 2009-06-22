@@ -40,6 +40,14 @@
 #include "net/base/base64.h"
 #include <assert.h>
 
+#ifdef _WIN32
+#include "win/WebInputEventFactory.h"
+#else
+#ifdef __APPLE__
+#include "mac/WebInputEventFactory.h"
+#endif
+#endif
+
 #ifndef _WIN32
 // For gettimeofday.
 #include <sys/time.h>
@@ -71,6 +79,7 @@ maxAsyncRenderPerSec(maxAsyncRenderPerSec), pageID(-1), nextPageID(1)
 	buttonState.leftDown = false;
 	buttonState.middleDown = false;
 	buttonState.rightDown = false;
+	modifiers = 0;
 }
 
 WebViewProxy::~WebViewProxy()
@@ -374,17 +383,13 @@ void WebViewProxy::injectMouseUp(short mouseButtonID)
 	handleMouseEvent(WebKit::WebInputEvent::MouseUp, mouseButtonID);
 }
 
-void WebViewProxy::injectMouseWheel(int scrollAmount)
-{
-	WebKit::WebMouseWheelEvent event;
-	event.type = WebKit::WebInputEvent::MouseWheel;
-	event.x = mouseX;
-	event.y = mouseY;
-	event.windowX = mouseX; // PRHFIXME: Window vs Global position?
-	event.windowY = mouseY;
-	event.globalX = mouseX;
-	event.globalY = mouseY;
-#if defined(WIN32)
+template <class EventType>
+void WebViewProxy::initializeWebEvent(EventType &event, WebKit::WebInputEvent::Type type) {
+	memset(&event, 0, sizeof(EventType)); // in case the definition changes.
+	event.type = type;
+	event.size = sizeof(EventType);
+	event.modifiers = modifiers;
+#if defined(_WIN32)
 	event.timeStampSeconds = GetTickCount() / 1000.0;
 #else
 	{
@@ -395,25 +400,93 @@ void WebViewProxy::injectMouseWheel(int scrollAmount)
 		event.timeStampSeconds = timestamp;
 	}
 #endif
+}
+
+void WebViewProxy::injectMouseWheel(int scrollAmountX, int scrollAmountY)
+{
+	WebKit::WebMouseWheelEvent event;
+	initializeWebEvent(event, WebKit::WebInputEvent::MouseWheel);
+	event.x = mouseX;
+	event.y = mouseY;
+	event.windowX = mouseX; // PRHFIXME: Window vs Global position?
+	event.windowY = mouseY;
+	event.globalX = mouseX;
+	event.globalY = mouseY;
 	event.button = WebKit::WebMouseEvent::ButtonNone;
-	event.deltaX = 0; // PRHFIXME: want x and y scroll.
-	event.deltaY = scrollAmount;
-	event.wheelTicksX = 0; // PRHFIXME: want x and y scroll.
-	event.wheelTicksY = scrollAmount;
+	event.deltaX = scrollAmountX; // PRHFIXME: want x and y scroll.
+	event.deltaY = scrollAmountY;
+	event.wheelTicksX = scrollAmountX; // PRHFIXME: want x and y scroll.
+	event.wheelTicksY = scrollAmountY;
 	event.scrollByPage = false;
 
 	view->HandleInputEvent(&event);
 }
 
-#if defined(WIN32)
+void WebViewProxy::injectKeyEvent(bool press, int modifiers, int windowsCode, int nativeCode) {
+	WebKit::WebKeyboardEvent event;
+	initializeWebEvent(event, press?WebKit::WebInputEvent::RawKeyDown:WebKit::WebInputEvent::KeyUp);
+	event.windowsKeyCode = windowsCode;
+	event.nativeKeyCode = nativeCode;
+	event.text[0]=0;
+	event.unmodifiedText[0]=0;
+	event.isSystemKey = !!(modifiers & Awesomium::SYSTEM_KEY);
+
+	event.modifiers=0;
+	if (modifiers & Awesomium::ALT_MOD)
+		event.modifiers |= WebKit::WebInputEvent::AltKey;
+	if (modifiers & Awesomium::CONTROL_MOD)
+		event.modifiers |= WebKit::WebInputEvent::ControlKey;
+	if (modifiers & Awesomium::SHIFT_MOD)
+		event.modifiers |= WebKit::WebInputEvent::ShiftKey;
+	if (modifiers & Awesomium::META_MOD)
+		event.modifiers |= WebKit::WebInputEvent::MetaKey;
+	if (modifiers & Awesomium::KEYPAD_KEY)
+		event.modifiers |= WebKit::WebInputEvent::IsKeyPad;
+	if (modifiers & Awesomium::AUTOREPEAT_KEY)
+		event.modifiers |= WebKit::WebInputEvent::IsAutoRepeat;
+
+	event.setKeyIdentifierFromWindowsKeyCode();
+
+	view->HandleInputEvent(&event);
+
+	// keep track of persistent modifiers.
+	this->modifiers = modifiers & (Awesomium::SHIFT_MOD|Awesomium::CONTROL_MOD|Awesomium::ALT_MOD|Awesomium::META_MOD);
+}
+void WebViewProxy::injectTextEvent(string16 text) {
+	// generate one of these events for each lengthCap chunks.
+	// 1 less because we need to null terminate.
+	const int lengthCap = WebKit::WebKeyboardEvent::textLengthCap-1;
+	WebKit::WebKeyboardEvent event;
+	initializeWebEvent(event, WebKit::WebInputEvent::Char);
+	event.isSystemKey = false;
+	event.windowsKeyCode = 0;
+	event.nativeKeyCode = 0;
+	event.keyIdentifier[0]=0;
+	size_t i;
+	while (text.size() > lengthCap) {
+
+	}
+	for (i = 0; i + lengthCap < text.size(); i+=lengthCap) {
+		memcpy(event.text, text.data()+i, lengthCap*sizeof(WebKit::WebUChar));
+		event.text[lengthCap]=0;
+		memcpy(event.unmodifiedText, text.data()+i, lengthCap*sizeof(WebKit::WebUChar));
+		event.unmodifiedText[lengthCap]=0;
+		view->HandleInputEvent(&event);
+	}
+	if (i < text.size()) {
+		assert(text.size()-i <= lengthCap);
+		memcpy(event.unmodifiedText, text.data()+i, (text.size()-i)*sizeof(WebKit::WebUChar));
+		memcpy(event.text, text.data()+i, (text.size()-i)*sizeof(WebKit::WebUChar));
+		event.text[text.size()-i]=0;
+		event.unmodifiedText[text.size()-i]=0;
+		view->HandleInputEvent(&event);
+	}
+}
+
+#if defined(_WIN32)
 void WebViewProxy::injectKeyboardEvent(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	WebKit::WebKeyboardEvent event;
-//	event.isSystemKey = (message == WM_SYSKEYDOWN || message = WM_SYSKEYUP);
-	///////PRHFIXME: Fix API so we don't need to interact with this stuff directly!
-
-//	WebKit::WebKeyboardEvent event(hwnd, message, wparam, lparam);
-
+	WebKit::WebKeyboardEvent event (WebKit::WebInputEventFactory::keyboardEvent(hwnd, message, wparam, lparam));
 	view->HandleInputEvent(&event);
 
 	checkKeyboardFocus();
@@ -422,14 +495,10 @@ void WebViewProxy::injectKeyboardEvent(HWND hwnd, UINT message, WPARAM wparam, L
 #elif defined(__APPLE__)
 void WebViewProxy::injectKeyboardEvent(NSEvent* keyboardEvent)
 {
-	WebKit::WebKeyboardEvent event;
-	// PRHFIXME: This function has the same issue as above.
-	// I guess keyboard input just won't work for now.
-	
+	WebKit::WebKeyboardEvent event (WebKit::WebInputEventFactory::keyboardEvent(keyboardEvent));
 	view->HandleInputEvent(&event);
 }
 #endif
-// PRHFIXME Linux support not added yet!
 
 void WebViewProxy::cut()
 {
@@ -560,7 +629,7 @@ void WebViewProxy::Release()
 // The returned ::WebView pointer is assumed to be owned by the host window,
 // and the caller of CreateWebView should not release the given ::WebView.
 // user_gesture is true if a user action initiated this call.
-::WebView* WebViewProxy::CreateWebView(::WebView* webview, bool user_gesture)
+::WebView* WebViewProxy::CreateWebView(::WebView* webview, bool user_gesture, const GURL& creator_url)
 {
 	/**
 	* Usually a new WebView is requested to be created when a user clicks on a link
@@ -604,47 +673,9 @@ WebPluginDelegate* WebViewProxy::CreatePluginDelegate(::WebView* webview, const 
 		return WindowlessPlugin::Create(info.path, mime_type);
 }
 
-// This method is called when default plugin has been correctly created and
-// initialized, and found that the missing plugin is available to install or
-// user has started installation.
-void WebViewProxy::OnMissingPluginStatus(WebPluginDelegate* delegate, int status)
-{
-}
-
 // This method is called to open a URL in the specified manner.
-void WebViewProxy::OpenURL(::WebView* webview, const GURL& url, WindowOpenDisposition disposition)
+void WebViewProxy::OpenURL(::WebView* webview, const GURL& url, const GURL& referrer,WindowOpenDisposition disposition)
 {
-}
-
-// Notifies how many matches have been found so far, for a given request_id.
-// |final_update| specifies whether this is the last update (all frames have
-// completed scoping).
-void WebViewProxy::ReportFindInPageMatchCount(int count, int request_id, bool final_update)
-{
-}
-
-// Notifies the browser what tick-mark rect is currently selected. Parameter
-// |request_id| lets the recipient know which request this message belongs to,
-// so that it can choose to ignore the message if it has moved on to other
-// things. |selection_rect| is expected to have coordinates relative to the
-// top left corner of the web page area and represent where on the screen the
-// selection rect is currently located.
-void WebViewProxy::ReportFindInPageSelection(int request_id, int active_match_ordinal, const gfx::Rect& selection_rect)
-{
-}
-
-// This function is called to retrieve a resource bitmap from the
-// renderer that was cached as a result of the renderer receiving a
-// ViewMsg_Preload_Bitmap message from the browser.
-const SkBitmap* WebViewProxy::GetPreloadedResourceBitmap(int resource_id)
-{
-	return NULL;
-}
-
-// Returns whether this ::WebView was opened by a user gesture.
-bool WebViewProxy::WasOpenedByUserGesture(::WebView* webview) const
-{
-	return true;
 }
 
 // FrameLoaderClient -------------------------------------------------------
@@ -688,10 +719,15 @@ void WebViewProxy::WindowObjectCleared(WebFrame* webframe)
 // take any additional separate action it wants to.
 //
 // is_redirect is true if this is a redirect rather than user action.
-WindowOpenDisposition WebViewProxy::DispositionForNavigationAction(::WebView* webview, WebFrame* frame,
-	const WebRequest* request, WebKit::WebNavigationType type, WindowOpenDisposition disposition, bool is_redirect)
+WindowOpenDisposition WebViewProxy::DispositionForNavigationAction(
+      ::WebView* webview,
+      WebFrame* frame,
+      const WebKit::WebURLRequest& request,
+      WebKit::WebNavigationType type,
+      WindowOpenDisposition disposition,
+      bool is_redirect)
 {
-	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginNavigate(parent, request->url().spec(), frame->GetName()));
+	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginNavigate(parent, request.url().spec(), frame->GetName()));
 
 	  // TODO - implement whitelisting/blackliting
 
@@ -747,8 +783,8 @@ void WebViewProxy::DidFailProvisionalLoadWithError(::WebView* webview, const Web
 // If the provisional load fails, we try to load a an error page describing
 // the user about the load failure.  |html| is the UTF8 text to display.  If
 // |html| is empty, we will fall back on a local error page.
-void WebViewProxy::LoadNavigationErrorPage(WebFrame* frame, const WebRequest* failed_request, const WebError& error,
-	const std::string& html, bool replace)
+void WebViewProxy::LoadNavigationErrorPage(WebFrame* frame, const WebKit::WebURLRequest& failed_request, const WebKit::WebURLError& error,
+		const std::string& html, bool replace)
 {
 }
 
@@ -959,11 +995,6 @@ void WebViewProxy::AddMessageToConsole(::WebView* webview, const std::wstring& m
 		parent->nullifyFutureJSValueCallbacks();
 }
 
-//
-void WebViewProxy::OnUnloadListenerChanged(::WebView* webview, WebFrame* webframe)
-{
-}
-
 // UIDelegate --------------------------------------------------------------
 
 // Asks the browser to show a modal HTML dialog.  The dialog is passed the
@@ -976,7 +1007,7 @@ void WebViewProxy::ShowModalHTMLDialog(const GURL& url, int width, int height, c
 // Displays a JavaScript alert panel associated with the given view. Clients
 // should visually indicate that this panel comes from JavaScript. The panel
 // should have a single OK button.
-void WebViewProxy::RunJavaScriptAlert(::WebView* webview, const std::wstring& message)
+void WebViewProxy::RunJavaScriptAlert(WebFrame* webframe, const std::wstring& message)
 {
 }
 
@@ -984,7 +1015,7 @@ void WebViewProxy::RunJavaScriptAlert(::WebView* webview, const std::wstring& me
 // Clients should visually indicate that this panel comes
 // from JavaScript. The panel should have two buttons, e.g. "OK" and
 // "Cancel". Returns true if the user hit OK, or false if the user hit Cancel.
-bool WebViewProxy::RunJavaScriptConfirm(::WebView* webview, const std::wstring& message)
+bool WebViewProxy::RunJavaScriptConfirm(WebFrame* webframe, const std::wstring& message)
 {
 	return false;
 }
@@ -996,7 +1027,7 @@ bool WebViewProxy::RunJavaScriptConfirm(::WebView* webview, const std::wstring& 
 // panel when it is shown. If the user hit OK, returns true and fills result
 // with the text in the box.  The value of result is undefined if the user
 // hit Cancel.
-bool WebViewProxy::RunJavaScriptPrompt(::WebView* webview, const std::wstring& message, const std::wstring& default_value, std::wstring* result)
+bool WebViewProxy::RunJavaScriptPrompt(WebFrame* webframe, const std::wstring& message, const std::wstring& default_value, std::wstring* result)
 {
 	return false;
 }
@@ -1006,7 +1037,7 @@ bool WebViewProxy::RunJavaScriptPrompt(::WebView* webview, const std::wstring& m
 // that the navigation should continue, and Cancel means that the navigation
 // should be cancelled, leaving the user on the current page.  Returns true
 // if the user hit OK, or false if the user hit Cancel.
-bool WebViewProxy::RunBeforeUnloadConfirm(::WebView* webview, const std::wstring& message)
+bool WebViewProxy::RunBeforeUnloadConfirm(WebFrame* webframe, const std::wstring& message)
 {
 	return true;  // OK, continue to navigate away
 }
@@ -1026,7 +1057,10 @@ void WebViewProxy::UpdateTargetURL(::WebView* webview, const GURL& url)
 // populated with the given initial_filename string.  The WebViewDelegate
 // will own the WebFileChooserCallback object and is responsible for
 // freeing it.
-void WebViewProxy::RunFileChooser(const std::wstring& initial_filename, WebFileChooserCallback* file_chooser)
+void WebViewProxy::RunFileChooser(bool multi_select,
+                              const string16& title,
+                              const FilePath& initial_filename,
+                              WebFileChooserCallback* file_chooser)
 {
 	delete file_chooser;
 }
@@ -1052,7 +1086,7 @@ void WebViewProxy::RunFileChooser(const std::wstring& initial_filename, WebFileC
 // sub frame.
 void WebViewProxy::ShowContextMenu(::WebView* webview, ContextNode node, int x, int y, const GURL& link_url, const GURL& image_url,
 	const GURL& page_url, const GURL& frame_url, const std::wstring& selection_text, const std::wstring& misspelled_word, int edit_flags, 
-	const std::string& frame_encoding)
+	const std::string& security_info, const std::string& frame_encoding)
 {
 }
 
@@ -1060,7 +1094,7 @@ void WebViewProxy::ShowContextMenu(::WebView* webview, ContextNode node, int x, 
 // webview: The ::WebView sending the delegate method.
 // drop_data: a WebDropData struct which should contain all the necessary
 // information for dragging data out of the webview.
-void WebViewProxy::StartDragging(::WebView* webview, const WebDropData& drop_data) 
+void WebViewProxy::StartDragging(::WebView* webview, const WebKit::WebDragData& drop_data) 
 {
 	// Immediately cancel drag
 	webview->DragSourceSystemDragEnded();
@@ -1380,7 +1414,7 @@ void WebViewProxy::handleMouseEvent(WebKit::WebInputEvent::Type type, short butt
 	int y = mouseY;
 
 	WebKit::WebMouseEvent event;
-	event.type = type;
+	initializeWebEvent(event,type);
 	event.x = x;
 	event.y = y;
 	event.globalX = x;
