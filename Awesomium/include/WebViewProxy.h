@@ -34,7 +34,7 @@
 #include "base/basictypes.h"
 #include "webkit/glue/webview.h"
 #include "webkit/glue/webframe.h"
-#include "WebUrlRequest.h"
+#include "WebURLRequest.h"
 #include "WebNavigationType.h"
 #include "webkit/glue/webview_delegate.h"
 #include "webkit/glue/webpreferences.h"
