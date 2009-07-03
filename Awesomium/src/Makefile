@@ -1,8 +1,18 @@
 
+ifeq ($(CHROMIUMDIR),)
 CHROMIUMDIR=../../../chromium/chromium
+endif
 
-CHROMIUMLIBNAMES=libbreakpad_client.a libbrowser.a libbz2.a libcommon.a libwebcore.a libconvert_dict.a libdebugger.a libgmock.a libgoogleurl.a libgtest.a libharfbuzz.a libharfbuzz_interface.a libhunspell.a libmedia.a libnet_test_support.a libplugin.a libprinting.a librenderer.a libtest_shell_common.a libtest_support_common.a libutility.a libglue.a libnet.a libsdch.a libv8.a libv8_base.a libv8.a libwebkit.a libwebcore.a libskia.a libglue.a libwebcore.a libapp_base.a libbase.a libbase_gfx.a libevent.a libffmpeg.a libwtf.a libwebkit.a libsqlite3.a libicui18n.a libicuuc.a libicudata.a libxml2.a libmodp_b64.a libxslt.a libjpeg.a liblzma_sdk.a libpcre.a libpng.a libz.a
-CHROMIUMLIBS=$(addprefix $(CHROMIUMDIR)/src/sconsbuild/Debug/lib/, $(CHROMIUMLIBNAMES))
+ifeq ($(CHROMIUMMODE),)
+CHROMIUMMODE=Debug
+endif
+
+ifeq ($(CHROMIUMLIBPATH),)
+CHROMIUMLIBPATH=$(CHROMIUMDIR)/src/sconsbuild/$(CHROMIUMMODE)/lib
+endif
+
+CHROMIUMLIBNAMES=libbrowser.a libbz2.a libcommon.a libwebcore.a libdebugger.a libgoogleurl.a libgtest.a libharfbuzz.a libharfbuzz_interface.a libhunspell.a libmedia.a libplugin.a libprinting.a librenderer.a libutility.a libglue.a libnet.a libsdch.a libv8.a libv8_base.a libv8.a libwebkit.a libwebcore.a libskia.a libglue.a libwebcore.a libapp_base.a libbase.a libbase_gfx.a libevent.a libffmpeg.a libwtf.a libwebkit.a libsqlite3.a libicui18n.a libicuuc.a libicudata.a libxml2.a libmodp_b64.a libxslt.a libjpeg.a libpcre.a libpng.a libz.a
+CHROMIUMLIBS=$(addprefix $(CHROMIUMLIBPATH)/, $(CHROMIUMLIBNAMES))
 
 # Sadly you aren't allowed to link to executables directly this way.
 #CHROMIUMLIBS= -Wl,-zmuldefs $(CHROMIUMDIR)/src/sconsbuild/Debug/chrome
@@ -16,13 +26,14 @@ SRCS=$(wildcard *.cpp)
 OBJS=$(SRCS:.cpp=.o)
 HEADERS=$(wildcard ../include/*.h)
 
-TARGET=libawesomium.so
+TARGET=../lib/libawesomium.so
 
 #all: mymain
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
+	mkdir ../lib 2>/dev/null || true
 	g++ $(OBJS) -shared $(LIBS) -o $@
 
 %.o: %.cpp $(HEADERS)
