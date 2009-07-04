@@ -1635,11 +1635,11 @@ void WebViewProxy::updateSessionHistory(WebFrame* frame)
 	if(!entry)
 		return;
 
-	std::string state;
-	if(!view->GetMainFrame()->GetPreviousHistoryState(&state))
+	WebKit::WebHistoryItem state = view->GetMainFrame()->GetPreviousHistoryItem();
+	if (state.isNull())
 		return;
 
-	entry->SetContentState(state);
+	entry->SetContentItem(state);
 }
 
 

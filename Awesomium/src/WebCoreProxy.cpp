@@ -34,7 +34,7 @@
 #include "base/string_util.h"
 #if defined(WIN32)
 #include "base/resource_util.h"
-#include "net/base/net_module.h"
+include "net/base/net_module.h"
 StringPiece NetResourceProvider(int key);
 #elif defined(__APPLE__)
 #include <Carbon/Carbon.h>
@@ -171,6 +171,11 @@ WebKit::WebString WebCoreProxy::cookies(const WebKit::WebURL& url, const WebKit:
 void WebCoreProxy::prefetchHostName(const WebKit::WebString&)
 {
 }
+
+bool WebCoreProxy::getFileSize(const WebKit::WebString& path, long long& result) {
+    return false;
+}
+
 
 WebKit::WebClipboard *WebCoreProxy::clipboard() {
 	return webclipboard;

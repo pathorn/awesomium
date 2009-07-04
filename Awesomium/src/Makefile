@@ -33,7 +33,7 @@ TARGET=../lib/libawesomium.so
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	mkdir ../lib 2>/dev/null || true
+	@mkdir ../lib 2>/dev/null || true
 	g++ $(OBJS) -shared $(LIBS) -o $@
 
 %.o: %.cpp $(HEADERS)

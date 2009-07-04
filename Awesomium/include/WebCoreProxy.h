@@ -69,6 +69,8 @@ public:
 	WebKit::WebString cookies(const WebKit::WebURL& url, const WebKit::WebURL& policy_url);
 	
 	void prefetchHostName(const WebKit::WebString&);
+
+	bool getFileSize(const WebKit::WebString& path, long long& result);
 	
 	WebKit::WebData loadResource(const char* name);
 	

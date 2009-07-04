@@ -97,29 +97,18 @@ class NavigationEntry {
 	// states. If you use write a custom TabContents and provide your own
 	// state make sure you have the ability to modify the format in the future
 	// while being able to deal with older versions.
-	void SetContentState(const std::string& state)
+	void SetContentItem(const WebKit::WebHistoryItem& item)
 	{
 //		cached_history_item_ = NULL;  // invalidate our cached item
-		state_ = state;
+		historyitem_ = item;
 	}
 
-	const std::string& GetContentState() const { return state_; }
+	const WebKit::WebHistoryItem& GetContentItem() const { return historyitem_; }
 
 	// Get the page id corresponding to the tab's state.
 	void SetPageID(int page_id) { page_id_ = page_id; }
 	int32 GetPageID() const { return page_id_; }
-/*
-	WebKit::WebHistoryItem* GetHistoryItem() const
-	{
-		if (!cached_history_item_)
-		{
-			NavigationExtraRequestData* extra_data = new NavigationExtraRequestData(GetPageID());
-			cached_history_item_ = WebKit::WebHistoryItem::Create(GetURL(), 
-				GetTitle(), GetContentState(), extra_data);
-		}
-		return cached_history_item_;
-	}
-*/
+
 	const std::wstring& GetTargetFrame() const { return target_frame_; }
 
 	void GetAuthorizationCredentials(std::string& username, std::string& password)
@@ -137,7 +126,7 @@ private:
 
 	GURL url_;
 	std::wstring title_;
-	std::string state_;
+	WebKit::WebHistoryItem historyitem_;
 	std::string authUsername, authPassword;
 	std::string htmlString;
 
@@ -316,7 +305,7 @@ public:
 		// The given entry might provide a new URL... e.g., navigating back to a
 		// page in session history could have resulted in a new client redirect.
 		existing_entry->SetURL(entry->GetURL());
-		existing_entry->SetContentState(entry->GetContentState());
+		existing_entry->SetContentItem(entry->GetContentItem());
 		last_committed_entry_index_ = pending_entry_index_;
 		pending_entry_index_ = -1;
 		pending_entry_ = NULL;
@@ -329,7 +318,7 @@ public:
 		// might result in a client redirect, which should override the URL of the
 		// existing entry.
 		existing_entry->SetURL(entry->GetURL());
-		existing_entry->SetContentState(entry->GetContentState());
+		existing_entry->SetContentItem(entry->GetContentItem());
 
 		// The navigation could have been issued by the renderer, so be sure that
 		// we update our current index.
