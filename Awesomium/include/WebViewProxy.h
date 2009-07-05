@@ -62,7 +62,7 @@ class WebViewProxy : public WebViewDelegate
 	Awesomium::RenderBuffer* backBuffer;
 	skia::PlatformCanvas* canvas;
 	int mouseX, mouseY;
-	struct { bool leftDown, middleDown, rightDown; } buttonState;	
+	int buttonState;
 	int modifiers;
 	::WebView* view;
 	Awesomium::WebView* parent;

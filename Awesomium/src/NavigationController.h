@@ -100,7 +100,11 @@ class NavigationEntry {
 	void SetContentItem(const WebKit::WebHistoryItem& item)
 	{
 //		cached_history_item_ = NULL;  // invalidate our cached item
-		historyitem_ = item;
+		if (item.isNull()) {
+			historyitem_.reset();
+		} else {
+			historyitem_ = item;
+		}
 	}
 
 	const WebKit::WebHistoryItem& GetContentItem() const { return historyitem_; }

@@ -4,22 +4,29 @@ CHROMIUMDIR=../../../chromium/chromium
 endif
 
 ifeq ($(CHROMIUMMODE),)
-CHROMIUMMODE=Debug
+CHROMIUMMODE=Release
+endif
+
+ifeq ($(CHROMIUMMODE),Debug)
+DEBUGFLAGS=-D_DEBUG
+else
+DEBUGFLAGS=-DNDEBUG
 endif
 
 ifeq ($(CHROMIUMLIBPATH),)
 CHROMIUMLIBPATH=$(CHROMIUMDIR)/src/sconsbuild/$(CHROMIUMMODE)/lib
 endif
 
-CHROMIUMLIBNAMES=libbrowser.a libbz2.a libcommon.a libwebcore.a libdebugger.a libgoogleurl.a libgtest.a libharfbuzz.a libharfbuzz_interface.a libhunspell.a libmedia.a libplugin.a libprinting.a librenderer.a libutility.a libglue.a libnet.a libsdch.a libv8.a libv8_base.a libv8.a libwebkit.a libwebcore.a libskia.a libglue.a libwebcore.a libapp_base.a libbase.a libbase_gfx.a libevent.a libffmpeg.a libwtf.a libwebkit.a libsqlite3.a libicui18n.a libicuuc.a libicudata.a libxml2.a libmodp_b64.a libxslt.a libjpeg.a libpcre.a libpng.a libz.a
-CHROMIUMLIBS=$(addprefix $(CHROMIUMLIBPATH)/, $(CHROMIUMLIBNAMES))
+#CHROMIUMLIBNAMES=libbrowser.a libbz2.a libcommon.a libwebcore.a libdebugger.a libgoogleurl.a libgtest.a libharfbuzz.a libharfbuzz_interface.a libhunspell.a libmedia.a libplugin.a libprinting.a librenderer.a libutility.a libglue.a libnet.a libsdch.a libv8.a libv8_base.a libv8.a libwebkit.a libwebcore.a libskia.a libglue.a libwebcore.a libapp_base.a libbase.a libbase_gfx.a libevent.a libffmpeg.a libwtf.a libwebkit.a libsqlite3.a libicui18n.a libicuuc.a libicudata.a libxml2.a libmodp_b64.a libxslt.a libjpeg.a libpcre.a libpng.a libz.a libharfbuzz.a libharfbuzz_interface.a
+#CHROMIUMLIBS=$(addprefix $(CHROMIUMLIBPATH)/, $(CHROMIUMLIBNAMES))
+CHROMIUMLIBS=-L$(CHROMIUMLIBPATH) -lsmime3 -lssl3 -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lgdk-x11-2.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lgio-2.0 -lpango-1.0 -lcairo -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lfontconfig -lfreetype -lrt -lgconf-2 -lglib-2.0 -lX11 -lasound -lcommon -lbrowser -ldebugger -lrenderer -lutility -lprinting -lapp_base -lbase -licui18n -licuuc -licudata -levent -lbase_gfx -lskia -lharfbuzz -lharfbuzz_interface -ljpeg -lpng -lz -lnet -lgoogleurl -lsdch -lgtest -lbz2 -lmodp_b64 -lv8 -lv8_base -lxml2 -lglue -lwebcore -lpcre -lwtf -lxslt -lsqlite3 -lwebkit -lmedia -lffmpeg -lhunspell -lplugin
 
 # Sadly you aren't allowed to link to executables directly this way.
 #CHROMIUMLIBS= -Wl,-zmuldefs $(CHROMIUMDIR)/src/sconsbuild/Debug/chrome
 
-CFLAGS= -g -m32 -I ../include `pkg-config --cflags gtk+-2.0 glib-2.0 gio-unix-2.0` $(addprefix -I$(CHROMIUMDIR)/src/,. third_party/npapi third_party/WebKit/JavaScriptCore skia/config third_party/skia/include/core webkit/api/public third_party/WebKit/WebCore/platform/text)
+CFLAGS= $(DEBUGFLAGS) -Wall -pthread -Wall -D_REENTRANT -D__STDC_FORMAT_MACROS -DCHROMIUM_BUILD -DU_STATIC_IMPLEMENTATION -g -m32 -I ../include `pkg-config --cflags gtk+-2.0 glib-2.0 gio-unix-2.0` $(addprefix -I$(CHROMIUMDIR)/src/,. third_party/npapi third_party/WebKit/JavaScriptCore skia/config third_party/skia/include/core webkit/api/public third_party/WebKit/WebCore/platform/text)
 
-LIBS= -g -m32 $(CHROMIUMLIBS) `pkg-config --libs gtk+-2.0 glib-2.0 gio-unix-2.0 gconf-2.0` -lrt -lssl3 -lnspr4 -lnss3 -lnssutil3 -lbz2 
+LIBS= -g -m32 -Wl,--start-group `pkg-config --libs gtk+-2.0 glib-2.0 gio-unix-2.0 gconf-2.0` -lrt -lssl3 -lnspr4 -lnss3 -lnssutil3 -lbz2 $(CHROMIUMLIBS) -Wl,--end-group
 #smime3
 
 SRCS=$(wildcard *.cpp)

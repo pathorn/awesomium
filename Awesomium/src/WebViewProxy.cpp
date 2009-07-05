@@ -76,10 +76,8 @@ maxAsyncRenderPerSec(maxAsyncRenderPerSec), pageID(-1), nextPageID(1)
 	else
 		backBuffer = 0;
 
-	buttonState.leftDown = false;
-	buttonState.middleDown = false;
-	buttonState.rightDown = false;
 	modifiers = 0;
+	buttonState = 0;
 }
 
 WebViewProxy::~WebViewProxy()
@@ -1419,38 +1417,33 @@ void WebViewProxy::handleMouseEvent(WebKit::WebInputEvent::Type type, short butt
 	event.y = y;
 	event.globalX = x;
 	event.globalY = y;
-#if defined(WIN32)
-	event.timeStampSeconds = GetTickCount() / 1000.0;
-#endif
 	event.button = WebKit::WebMouseEvent::ButtonNone;
+	event.modifiers |= buttonState;
 
-	if(type == WebKit::WebInputEvent::MouseMove)
+	if(type == WebKit::WebInputEvent::MouseDown || type == WebKit::WebInputEvent::MouseUp)
 	{
-		if(buttonState.leftDown)
-			event.button = WebKit::WebMouseEvent::ButtonLeft;
-		else if(buttonState.middleDown)
-			event.button = WebKit::WebMouseEvent::ButtonMiddle;
-		else if(buttonState.rightDown)
-			event.button = WebKit::WebMouseEvent::ButtonRight;
-	}
-	else if(type == WebKit::WebInputEvent::MouseDown || type == WebKit::WebInputEvent::MouseUp)
-	{
-		bool buttonChange = type == WebKit::WebInputEvent::MouseDown;
+		int buttonChangeMask = 0;
 
 		switch(buttonID)
 		{
 		case Awesomium::LEFT_MOUSE_BTN:
-			buttonState.leftDown = buttonChange;
+			buttonChangeMask = WebKit::WebInputEvent::LeftButtonDown;
 			event.button = WebKit::WebMouseEvent::ButtonLeft;
 			break;
 		case Awesomium::MIDDLE_MOUSE_BTN:
-			buttonState.middleDown = buttonChange;
+			buttonChangeMask = WebKit::WebInputEvent::MiddleButtonDown;
 			event.button = WebKit::WebMouseEvent::ButtonMiddle;
 			break;
 		case Awesomium::RIGHT_MOUSE_BTN:
-			buttonState.rightDown = buttonChange;
+			buttonChangeMask = WebKit::WebInputEvent::RightButtonDown;
 			event.button = WebKit::WebMouseEvent::ButtonRight;
 			break;
+		}
+		if (type == WebKit::WebInputEvent::MouseDown) {
+			buttonState |= buttonChangeMask;
+			event.clickCount = 1;
+		} else {
+			buttonState &= (~buttonChangeMask);
 		}
 	}
 
