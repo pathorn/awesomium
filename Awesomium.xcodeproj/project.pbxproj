@@ -69,8 +69,8 @@
 		69E758360F6B8918006A045E /* libwebkit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 69E754C90F6A4782006A045E /* libwebkit.a */; };
 		8D07F2BE0486CC7A007CD1D0 /* Awesomium_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32BAE0B70371A74B00C91783 /* Awesomium_Prefix.pch */; };
 		8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
-		CD7C1E490FEA1FB300D3447A /* libv8_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD7C1E480FEA1FB300D3447A /* libv8_base.a */; };
-		CD7C1E4D0FEA1FE300D3447A /* libv8.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD7C1E4C0FEA1FE300D3447A /* libv8.a */; };
+		CD7C1E490FEA1FB300D3447A /* libv8_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE713260FE5019100CDA83D /* libv8_base.a */; };
+		CD7C1E4D0FEA1FE300D3447A /* libv8.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE7132C0FE5019100CDA83D /* libv8.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -603,8 +603,6 @@
 		69E757F90F6B8487006A045E /* v8.xcodeproj */ = {isa = PBXFileReference; explicitFileType = "wrapper.pb-project"; name = v8.xcodeproj; path = ../chromium/src/v8/tools/gyp/v8.xcodeproj; sourceTree = SOURCE_ROOT; };
 		8D07F2C70486CC7A007CD1D0 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D07F2C80486CC7A007CD1D0 /* Awesomium.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Awesomium.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		CD7C1E480FEA1FB300D3447A /* libv8_base.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8_base.a; path = ../chromium/src/xcodebuild/Debug/libv8_base.a; sourceTree = SOURCE_ROOT; };
-		CD7C1E4C0FEA1FE300D3447A /* libv8.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libv8.a; path = ../chromium/src/xcodebuild/Debug/libv8.a; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -663,8 +661,6 @@
 		0867D691FE84028FC02AAC07 /* Awesomium */ = {
 			isa = PBXGroup;
 			children = (
-				CD7C1E4C0FEA1FE300D3447A /* libv8.a */,
-				CD7C1E480FEA1FB300D3447A /* libv8_base.a */,
 				6973F84B0F5C47C600848DA6 /* Chromium Projects */,
 				6973F94C0F5C484600848DA6 /* External Libraries */,
 				6915D8050F55E7F7003511B7 /* External Frameworks */,
@@ -1714,6 +1710,9 @@
 				);
 				GCC_VERSION = 4.2;
 				HEADER_SEARCH_PATHS = (
+					../chromium/chromium/src/webkit/api/public,
+					../chromium/chromium/src/third_party/skia/include/core,
+					../chromium/chromium/src/skia/config,
 					../chromium/chromium/src,
 					../chromium/chromium/src/skia/include,
 					../chromium/chromium/src/skia/include/corecg,
@@ -1729,7 +1728,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../chromium/chromium/src/third_party/WebKit/WebKitLibraries\"",
-					"\"$(SRCROOT)/../chromium/src/xcodebuild/Debug\"",
+					"\"$(SRCROOT)/../chromium/src/xcodebuild/Release\"",
 				);
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
