@@ -1659,6 +1659,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					OS_MACOSX,
 					__APPLE__,
+					_DEBUG,
 				);
 				GCC_VERSION = 4.2;
 				HEADER_SEARCH_PATHS = (
@@ -1707,6 +1708,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					OS_MACOSX,
 					__APPLE__,
+					NDEBUG,
 				);
 				GCC_VERSION = 4.2;
 				HEADER_SEARCH_PATHS = (
