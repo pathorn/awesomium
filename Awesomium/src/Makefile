@@ -24,7 +24,7 @@ CHROMIUMLIBS=-L$(CHROMIUMLIBPATH) -lsmime3 -lssl3 -lplds4 -lplc4 -lnspr4 -lpthre
 # Sadly you aren't allowed to link to executables directly this way.
 #CHROMIUMLIBS= -Wl,-zmuldefs $(CHROMIUMDIR)/src/sconsbuild/Debug/chrome
 
-CFLAGS= $(DEBUGFLAGS) -Wall -pthread -Wall -D_REENTRANT -D__STDC_FORMAT_MACROS -DCHROMIUM_BUILD -DU_STATIC_IMPLEMENTATION -g -m32 -I ../include `pkg-config --cflags gtk+-2.0 glib-2.0 gio-unix-2.0` $(addprefix -I$(CHROMIUMDIR)/src/,. third_party/npapi third_party/WebKit/JavaScriptCore skia/config third_party/skia/include/core webkit/api/public third_party/WebKit/WebCore/platform/text)
+CFLAGS= $(DEBUGFLAGS) -Wall -pthread -Wall -D_REENTRANT -D__STDC_FORMAT_MACROS -DCHROMIUM_BUILD -DU_STATIC_IMPLEMENTATION -g -m32 -I ../include `pkg-config --cflags gtk+-2.0 glib-2.0 gio-unix-2.0` $(addprefix -I$(CHROMIUMDIR)/src/,. third_party/npapi third_party/WebKit/JavaScriptCore third_party/icu38/public/common deps/third_party/icu42/public/common skia/config third_party/skia/include/core webkit/api/public third_party/WebKit/WebCore/platform/text)
 
 LIBS= -g -m32 -Wl,--start-group `pkg-config --libs gtk+-2.0 glib-2.0 gio-unix-2.0 gconf-2.0` -lrt -lssl3 -lnspr4 -lnss3 -lnssutil3 -lbz2 $(CHROMIUMLIBS) -Wl,--end-group
 #smime3
