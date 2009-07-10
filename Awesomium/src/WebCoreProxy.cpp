@@ -34,7 +34,7 @@
 #include "base/string_util.h"
 #if defined(WIN32)
 #include "base/resource_util.h"
-include "net/base/net_module.h"
+#include "net/base/net_module.h"
 StringPiece NetResourceProvider(int key);
 #elif defined(__APPLE__)
 #include <Carbon/Carbon.h>
