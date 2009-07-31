@@ -43,6 +43,8 @@ namespace Awesomium {
 class _OSMExport WebViewListener
 {
 public:
+	virtual ~WebViewListener() {}
+
 	/**
 	* This event is fired when a WebView begins navigating to a new URL.
 	*
