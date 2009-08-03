@@ -160,6 +160,11 @@ public:
 	void goToHistoryOffset(int offset);
 
 	/**
+	* Refresh the current page.
+	*/
+	void refresh();
+
+	/**
 	* Executes a string of Javascript in the context of the current page asynchronously.
 	*
 	* @param	javascript	The string of Javascript to execute.

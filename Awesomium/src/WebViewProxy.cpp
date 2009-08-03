@@ -164,6 +164,11 @@ void WebViewProxy::goToHistoryOffset(int offset)
 	navController->GoToOffset(offset);
 }
 
+void WebViewProxy::refresh()
+{
+	navController->Reload();
+}
+
 void WebViewProxy::executeJavascript(const std::string& javascript, const std::wstring& frameName)
 {
 	WebFrame* frame = view->GetMainFrame();

@@ -142,6 +142,11 @@ void Awesomium::WebView::goToHistoryOffset(int offset)
 	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::goToHistoryOffset, offset));
 }
 
+void Awesomium::WebView::refresh()
+{
+	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::refresh));
+}
+
 void Awesomium::WebView::executeJavascript(const std::string& javascript, const std::wstring& frameName)
 {
 	coreThread->message_loop()->PostTask(FROM_HERE, NewRunnableMethod(viewProxy, &WebViewProxy::executeJavascript, javascript, frameName));

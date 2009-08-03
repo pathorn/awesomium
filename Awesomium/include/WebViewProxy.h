@@ -106,6 +106,7 @@ public:
 	void loadFile(const std::string& file, const std::wstring& frameName);
 
 	void goToHistoryOffset(int offset);
+	void refresh();
 
 	void executeJavascript(const std::string& javascript, const std::wstring& frameName = std::wstring());
 	void setProperty(const std::string& name, const Awesomium::JSValue& value);
