@@ -170,6 +170,7 @@ public:
 
 	::WebView* CreateWebView(::WebView* webview, bool user_gesture, const GURL& creator_url);
 
+	WebWidget* CreatePopupWidgetWithInfo(::WebView* webview, const WebKit::WebPopupMenuInfo& popup_info);
 	WebWidget* CreatePopupWidget(::WebView* webview, bool focus_on_show);
 
 	WebPluginDelegate* CreatePluginDelegate(::WebView* webview, const GURL& url, const std::string& mime_type,

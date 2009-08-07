@@ -35,6 +35,7 @@
 #include "base/string_util.h"
 #include "webkit/glue/plugins/plugin_list.h"
 #include "webkit/glue/glue_util.h"
+#include "WebPopupMenuInfo.h"
 #include "WebDataSource.h"
 #include "WebURLResponse.h"
 #include "net/base/base64.h"
@@ -649,6 +650,16 @@ void WebViewProxy::Release()
 			view->GetFocusedFrame()->GetName(), std::string(), std::string()));
 
 	return NULL;
+}
+
+
+WebWidget* WebViewProxy::CreatePopupWidgetWithInfo(::WebView* webview, const WebKit::WebPopupMenuInfo& popup_info) {
+	WebWidget* wid = CreatePopupWidget(webview, true);
+	//popup_info.itemHeight*popup_info.items.size();
+	//wid->resize(WebKit::WebSize(width, height));
+	wid->setFocus(true);
+	wid->layout();
+	return wid;
 }
 
 // This method is called to create a new WebWidget to act as a popup
