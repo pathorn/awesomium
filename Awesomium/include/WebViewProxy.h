@@ -34,6 +34,7 @@
 #include "base/basictypes.h"
 #include "webkit/glue/webview.h"
 #include "webkit/glue/webframe.h"
+#include "WebCursorInfo.h"
 #include "WebURLRequest.h"
 #include "WebNavigationType.h"
 #include "webkit/glue/webview_delegate.h"
@@ -70,13 +71,13 @@ class WebViewProxy : public WebViewDelegate
 	bool isPopupsDirty;
 	bool needsPainting;
 	ClientObject* clientObject;
-	WebCursor curCursor;
+	WebKit::WebCursorInfo curCursor;
 	std::wstring curTooltip;
 	LockImpl *renderBufferLock, *refCountLock;
 	base::RepeatingTimer<WebViewProxy> renderTimer;
+	const bool enableAsyncRendering;
 	bool isAsyncRenderDirty;
 	int maxAsyncRenderPerSec;
-	const bool enableAsyncRendering;
 	bool isTransparent;
 	GURL lastTargetURL;
 	NavigationController* navController;
@@ -174,7 +175,7 @@ public:
 	WebPluginDelegate* CreatePluginDelegate(::WebView* webview, const GURL& url, const std::string& mime_type,
 		const std::string& clsid, std::string* actual_mime_type);
 
-	void OpenURL(::WebView* webview, const GURL& url, const GURL& referrer, WindowOpenDisposition disposition);
+	void OpenURL(::WebView* webview, const GURL& url, const GURL& referrer, WebKit::WebNavigationPolicy disposition);
 
 	void DidStartLoading(::WebView* webview);
 
@@ -182,12 +183,12 @@ public:
 
 	void WindowObjectCleared(WebFrame* webframe);
 
-	WindowOpenDisposition DispositionForNavigationAction(
+	WebKit::WebNavigationPolicy PolicyForNavigationAction(
       ::WebView* webview,
       WebFrame* frame,
       const WebKit::WebURLRequest& request,
       WebKit::WebNavigationType type,
-      WindowOpenDisposition disposition,
+      WebKit::WebNavigationPolicy default_policy,
       bool is_redirect);
 
 	void DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame* frame, NavigationGesture gesture);
@@ -257,9 +258,14 @@ public:
                               const FilePath& initial_filename,
                               WebFileChooserCallback* file_chooser);
 
-	void ShowContextMenu(::WebView* webview, ContextNode node, int x, int y, const GURL& link_url,
-		const GURL& image_url, const GURL& page_url, const GURL& frame_url, const std::wstring& selection_text, 
-		const std::wstring& misspelled_word, int edit_flags, const std::string& security_info, const std::string& frame_encoding);
+	void ShowContextMenu(
+		::WebView* webview, ContextNodeType node,
+		int x, int y,
+		const GURL& link_url, const GURL& image_url,
+		const GURL& page_url, const GURL& frame_url,
+		const std::wstring& selection_text, 
+		const std::wstring& misspelled_word, int edit_flags,
+		const std::string& security_info, const std::string& frame_encoding);
 
 	void StartDragging(::WebView* webview, const WebKit::WebDragData& drop_data);
 
@@ -293,10 +299,6 @@ public:
 
 	void DidDownloadImage(int id, const GURL& image_url, bool errored, const SkBitmap& image);
 
-	GURL GetAlternateErrorPageURL(const GURL& failedURL, ErrorPageType error_type);
-
-//	WebKit::WebHistoryItem* GetHistoryEntryAtOffset(int offset);
-
 	void GoToEntryAtOffsetAsync(int offset);
 
 	int GetHistoryBackListCount();
@@ -318,41 +320,33 @@ public:
 
 	void TransitionToCommittedForNewPage();
 
-	gfx::NativeViewId GetContainingView(WebWidget* webwidget);
+	void didInvalidateRect(const WebKit::WebRect& rect);
 
-	void DidInvalidateRect(WebWidget* webwidget, const WebKit::WebRect& rect);
+	void didScrollRect(int dx, int dy, const WebKit::WebRect& clip_rect);
 
-	void DidScrollRect(WebWidget* webwidget, int dx, int dy, const WebKit::WebRect& clip_rect);
+	void closeWidgetSoon();
 
-	void Show(WebWidget* webwidget, WindowOpenDisposition disposition);
+	void didFocus();
 
-	void CloseWidgetSoon(WebWidget* webwidget);
+	void didBlur();
 
-	void Focus(WebWidget* webwidget);
+	void didChangeCursor(const WebKit::WebCursorInfo& cursor);
 
-	void Blur(WebWidget* webwidget);
+	WebKit::WebRect windowRect();
 
-	void SetCursor(WebWidget* webwidget, const WebCursor& cursor);
+	void setWindowRect(const WebKit::WebRect& rect);
 
-	void GetWindowRect(WebWidget* webwidget, WebKit::WebRect* rect);
+	WebKit::WebRect rootWindowRect();
 
-	void SetWindowRect(WebWidget* webwidget, const WebKit::WebRect& rect);
+	WebKit::WebRect windowResizerRect();
 
-	void GetRootWindowRect(WebWidget* webwidget, WebKit::WebRect* rect);
+	void DidMovePlugin(const WebPluginGeometry& move);
 
-	void GetRootWindowResizerRect(WebWidget* webwidget, WebKit::WebRect* rect);
+	void runModal();
 
-	void DidMove(WebWidget* webwidget, const WebPluginGeometry& move);
+	void show(WebKit::WebNavigationPolicy);
 
-	void RunModal(WebWidget* webwidget);
-
-	bool IsHidden(WebWidget * webwidget);
-
-	WebKit::WebScreenInfo GetScreenInfo(WebWidget *);
-
-	// PRHFIXME: unimplemented
-	void ShowAsPopupWithItems(WebWidget *,const WebKit::WebRect &,int,int,const std::vector<WebMenuItem> &);
-
+	WebKit::WebScreenInfo screenInfo();
 };
 
 #endif

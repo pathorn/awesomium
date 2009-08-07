@@ -155,9 +155,10 @@ namespace {
 		// various URLRequest callbacks.  The event hooks, defined below, trigger
 		// these methods asynchronously.
 		
-		void NotifyReceivedRedirect(const GURL& new_url) {
+		void NotifyReceivedRedirect(const GURL& new_url,
+					const ResourceLoaderBridge::ResponseInfo& info) {
 			if (peer_)
-				peer_->OnReceivedRedirect(new_url);
+				peer_->OnReceivedRedirect(new_url, info);
 		}
 		
 		void NotifyReceivedResponse(const ResourceLoaderBridge::ResponseInfo& info,
@@ -256,9 +257,12 @@ namespace {
 		// callbacks) that run on the IO thread.  They are designed to be overridden
 		// by the SyncRequestProxy subclass.
 		
-		virtual void OnReceivedRedirect(const GURL& new_url) {
+		virtual void OnReceivedRedirect(const GURL& new_url,
+				const ResourceLoaderBridge::ResponseInfo& responseInfo,
+				bool* defer_redirect) {
+			*defer_redirect = true;
 			owner_loop_->PostTask(FROM_HERE, NewRunnableMethod(
-															   this, &RequestProxy::NotifyReceivedRedirect, new_url));
+															   this, &RequestProxy::NotifyReceivedRedirect, new_url, responseInfo));
 		}
 		
 		virtual void OnReceivedResponse(
@@ -281,12 +285,6 @@ namespace {
 		
 		// --------------------------------------------------------------------------
 		// URLRequest::Delegate implementation:
-		
-		virtual void OnReceivedRedirect(URLRequest* request,
-										const GURL& new_url) {
-			DCHECK(request->status().is_success());
-			OnReceivedRedirect(new_url);
-		}
 		
 		virtual void OnResponseStarted(URLRequest* request) {
 			if (request->status().is_success()) {

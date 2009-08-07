@@ -71,7 +71,7 @@ public:
 };
 
 WebCoreProxy::WebCoreProxy(base::Thread* coreThread, bool pluginsEnabled) : coreThread(coreThread),
-	pluginsEnabled(pluginsEnabled), pauseRequestEvent(false, false), threadWaitEvent(false, false)
+	pluginsEnabled(pluginsEnabled), threadWaitEvent(false, false), pauseRequestEvent(false, false)
 {
 	static bool icuLoaded = false;
 
@@ -137,6 +137,10 @@ void WebCoreProxy::resume()
 	threadWaitEvent.Signal();
 }
 
+bool WebCoreProxy::sandboxEnabled() {
+	return false;
+}
+
 WebKit::WebMimeRegistry* WebCoreProxy::mimeRegistry()
 {
     return &mime_registry_;
@@ -172,10 +176,29 @@ void WebCoreProxy::prefetchHostName(const WebKit::WebString&)
 {
 }
 
-bool WebCoreProxy::getFileSize(const WebKit::WebString& path, long long& result) {
-    return false;
+WebKit::WebMessagePortChannel*
+WebCoreProxy::createMessagePortChannel() {
+	NOTREACHED();
+	return NULL;
+}
+WebKit::WebStorageNamespace*
+WebCoreProxy::createLocalStorageNamespace(
+	const WebKit::WebString& path) {
+	// The "WebStorage" interface is used for renderer WebKit -> browser WebKit
+	// communication only.  "WebStorageClient" will be used for browser WebKit ->
+	// renderer WebKit.  So this will never be implemented.
+	NOTREACHED();
+	return 0;
 }
 
+WebKit::WebStorageNamespace*
+WebCoreProxy::createSessionStorageNamespace() {
+	// The "WebStorage" interface is used for renderer WebKit -> browser WebKit
+	// communication only.  "WebStorageClient" will be used for browser WebKit ->
+	// renderer WebKit.  So this will never be implemented.
+	NOTREACHED();
+	return 0;
+}
 
 WebKit::WebClipboard *WebCoreProxy::clipboard() {
 	return webclipboard;

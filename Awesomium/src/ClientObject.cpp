@@ -57,7 +57,7 @@ public:
 	void handleCallback(const CppArgumentList& args, CppVariant* result);
 };
 
-ClientObject::ClientObject(Awesomium::WebView* view) : view(view), futureValueCallback(0), checkKeyboardFocusCallback(0)
+ClientObject::ClientObject(Awesomium::WebView* view) : futureValueCallback(0), checkKeyboardFocusCallback(0), view(view)
 {
 }
 

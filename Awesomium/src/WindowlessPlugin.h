@@ -50,7 +50,7 @@ public:
 	base::RepeatingTimer<WindowlessPlugin> pluginUpdateTimer;
 #endif
 	
-	WindowlessPlugin(NPAPI::PluginInstance *pluginInstance) : hdc(0), needsSetWindow(false)
+	WindowlessPlugin(NPAPI::PluginInstance *pluginInstance) : needsSetWindow(false), hdc(0)
 	{
 		this->pluginInstance = pluginInstance;
 		pluginInstance->set_use_mozilla_user_agent();
@@ -416,7 +416,7 @@ public:
 			pluginInstance->SetURLLoadData(GURL(url.c_str()), notify_data);
 	}
 
-	bool HandleInputEvent(const WebKit::WebInputEvent &,WebCursor *) {
+	bool HandleInputEvent(const WebKit::WebInputEvent &,WebKit::WebCursorInfo *) {
 		// PRHFIXME: What to do here? 
 		return false;
 	}

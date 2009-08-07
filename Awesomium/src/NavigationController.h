@@ -72,14 +72,14 @@ class NavigationEntry {
 	: page_id_(page_id),
 	  url_(url),
 	  title_(title),
-	  target_frame_(target_frame),
-	  authUsername(authUsername), authPassword(authPassword) {}
+	  authUsername(authUsername), authPassword(authPassword),
+	  target_frame_(target_frame) {}
 
 	NavigationEntry(int page_id, const std::string& htmlString, const GURL& url, const std::wstring& target_frame)
 		: page_id_(page_id),
-		htmlString(htmlString),
 		url_(url),
-		target_frame_(target_frame){}
+		htmlString(htmlString),
+		target_frame_(target_frame) {}
 
 	// Virtual to allow test_shell to extend the class.
 	~NavigationEntry() {}

@@ -61,9 +61,12 @@ typedef WebKit::WebURLError WebError;
 std::wstring stringToWide(const std::string &stringToConvert);
 
 WebViewProxy::WebViewProxy(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, Awesomium::WebView* parent)
-: view(0), width(width), height(height), canvas(0), isPopupsDirty(false), needsPainting(false), parent(parent), refCount(0), 
-clientObject(0), mouseX(0), mouseY(0), isTransparent(isTransparent), enableAsyncRendering(enableAsyncRendering), isAsyncRenderDirty(false),
-maxAsyncRenderPerSec(maxAsyncRenderPerSec), pageID(-1), nextPageID(1)
+: refCount(0), width(width), height(height), canvas(0),
+mouseX(0), mouseY(0), view(0), parent(parent),
+isPopupsDirty(false), needsPainting(false),
+clientObject(0), enableAsyncRendering(enableAsyncRendering), isAsyncRenderDirty(false),
+maxAsyncRenderPerSec(maxAsyncRenderPerSec), isTransparent(isTransparent),
+pageID(-1), nextPageID(1)
 {
 	renderBuffer = new Awesomium::RenderBuffer(width, height);
 	canvas = new skia::PlatformCanvas(width, height, true);
@@ -97,7 +100,7 @@ WebViewProxy::~WebViewProxy()
 void WebViewProxy::asyncStartup()
 {
 	view = ::WebView::Create(this, WebPreferences());
-	view->Resize(WebKit::WebSize(width, height));
+	view->resize(WebKit::WebSize(width, height));
 	clientObject = new ClientObject(parent);
 
 	if(enableAsyncRendering)
@@ -124,7 +127,7 @@ void WebViewProxy::asyncShutdown()
 
 	delete clientObject;
 
-	view->Close();
+	view->close();
 
 	LOG(INFO) << "In WebViewProxy::asyncShutdown, refCount is " << refCount;
 
@@ -218,8 +221,8 @@ WebKit::WebRect WebViewProxy::render()
 	if(isTransparent)
 	{
 		executeJavascript("document.body.style.backgroundColor = '#000000'");
-		view->Layout();
-		view->Paint(canvas, invalidArea);
+		view->layout();
+		view->paint(canvas, invalidArea);
 
 		int rowBytes, height, size;
 
@@ -236,8 +239,8 @@ WebKit::WebRect WebViewProxy::render()
 		}
 
 		executeJavascript("document.body.style.backgroundColor = '#FFFFFF'");
-		view->Layout();
-		view->Paint(canvas, invalidArea);
+		view->layout();
+		view->paint(canvas, invalidArea);
 		needsPainting = false;
 
 		{
@@ -301,7 +304,7 @@ WebKit::WebRect WebViewProxy::render()
 
 		for(std::vector<PopupWidget*>::iterator i = popups.begin(); i != popups.end(); i++)
 		{
-			(*i)->GetWindowRect(0, &tempRect);
+			tempRect = (*i)->windowRect();
 			if(!tempRect.isEmpty())
 			{
 				(*i)->renderToWebView(activeBuffer, isTransparent);
@@ -362,8 +365,8 @@ void WebViewProxy::paint()
 {
 	if(!dirtyArea.IsEmpty() && needsPainting)
 	{
-		view->Layout();
-		view->Paint(canvas, dirtyArea);
+		view->layout();
+		view->paint(canvas, dirtyArea);
 		needsPainting = false;
 	}
 }
@@ -422,7 +425,7 @@ void WebViewProxy::injectMouseWheel(int scrollAmountX, int scrollAmountY)
 	event.wheelTicksY = scrollAmountY;
 	event.scrollByPage = false;
 
-	view->HandleInputEvent(&event);
+	view->handleInputEvent(event);
 }
 
 void WebViewProxy::injectKeyEvent(bool press, int modifiers, int windowsCode, int nativeCode) {
@@ -450,7 +453,7 @@ void WebViewProxy::injectKeyEvent(bool press, int modifiers, int windowsCode, in
 
 	event.setKeyIdentifierFromWindowsKeyCode();
 
-	view->HandleInputEvent(&event);
+	view->handleInputEvent(event);
 
 	// keep track of persistent modifiers.
 	this->modifiers = modifiers & (Awesomium::SHIFT_MOD|Awesomium::CONTROL_MOD|Awesomium::ALT_MOD|Awesomium::META_MOD);
@@ -458,7 +461,7 @@ void WebViewProxy::injectKeyEvent(bool press, int modifiers, int windowsCode, in
 void WebViewProxy::injectTextEvent(string16 text) {
 	// generate one of these events for each lengthCap chunks.
 	// 1 less because we need to null terminate.
-	const int lengthCap = WebKit::WebKeyboardEvent::textLengthCap-1;
+	const size_t lengthCap = WebKit::WebKeyboardEvent::textLengthCap-1;
 	WebKit::WebKeyboardEvent event;
 	initializeWebEvent(event, WebKit::WebInputEvent::Char);
 	event.isSystemKey = false;
@@ -474,7 +477,7 @@ void WebViewProxy::injectTextEvent(string16 text) {
 		event.text[lengthCap]=0;
 		memcpy(event.unmodifiedText, text.data()+i, lengthCap*sizeof(WebKit::WebUChar));
 		event.unmodifiedText[lengthCap]=0;
-		view->HandleInputEvent(&event);
+		view->handleInputEvent(event);
 	}
 	if (i < text.size()) {
 		assert(text.size()-i <= lengthCap);
@@ -482,7 +485,7 @@ void WebViewProxy::injectTextEvent(string16 text) {
 		memcpy(event.text, text.data()+i, (text.size()-i)*sizeof(WebKit::WebUChar));
 		event.text[text.size()-i]=0;
 		event.unmodifiedText[text.size()-i]=0;
-		view->HandleInputEvent(&event);
+		view->handleInputEvent(event);
 	}
 }
 
@@ -490,7 +493,7 @@ void WebViewProxy::injectTextEvent(string16 text) {
 void WebViewProxy::injectKeyboardEvent(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	WebKit::WebKeyboardEvent event (WebKit::WebInputEventFactory::keyboardEvent(hwnd, message, wparam, lparam));
-	view->HandleInputEvent(&event);
+	view->handleInputEvent(event);
 
 	checkKeyboardFocus();
 }
@@ -499,7 +502,7 @@ void WebViewProxy::injectKeyboardEvent(HWND hwnd, UINT message, WPARAM wparam, L
 void WebViewProxy::injectKeyboardEvent(NSEvent* keyboardEvent)
 {
 	WebKit::WebKeyboardEvent event (WebKit::WebInputEventFactory::keyboardEvent(keyboardEvent));
-	view->HandleInputEvent(&event);
+	view->handleInputEvent(event);
 }
 #endif
 
@@ -573,9 +576,9 @@ void WebViewProxy::resize(int width, int height)
 		backBuffer = new Awesomium::RenderBuffer(width, height);
 	}
 
-	view->Resize(gfx::Size(width, height));
+	view->resize(gfx::Size(width, height));
 
-	DidInvalidateRect(0, gfx::Rect(width, height));
+	didInvalidateRect(WebKit::WebRect(0, 0, width, height));
 	invalidatePopups();
 
 	dirtyArea = gfx::Rect(width, height);
@@ -590,7 +593,7 @@ void WebViewProxy::setTransparent(bool isTransparent)
 {
 	this->isTransparent = isTransparent;
 
-	DidInvalidateRect(0, gfx::Rect(width, height));
+	didInvalidateRect(WebKit::WebRect(0, 0, width, height));
 }
 
 void WebViewProxy::invalidatePopups()
@@ -677,7 +680,7 @@ WebPluginDelegate* WebViewProxy::CreatePluginDelegate(::WebView* webview, const 
 }
 
 // This method is called to open a URL in the specified manner.
-void WebViewProxy::OpenURL(::WebView* webview, const GURL& url, const GURL& referrer,WindowOpenDisposition disposition)
+void WebViewProxy::OpenURL(::WebView* webview, const GURL& url, const GURL& referrer,WebKit::WebNavigationPolicy policy)
 {
 }
 
@@ -694,7 +697,7 @@ void WebViewProxy::DidStopLoading(::WebView* webview)
 {
 	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::FinishLoad(parent));
 
-	DidInvalidateRect(0, gfx::Rect(width, height));
+	didInvalidateRect(WebKit::WebRect(0, 0, width, height));
 	invalidatePopups();
 }
 
@@ -722,19 +725,19 @@ void WebViewProxy::WindowObjectCleared(WebFrame* webframe)
 // take any additional separate action it wants to.
 //
 // is_redirect is true if this is a redirect rather than user action.
-WindowOpenDisposition WebViewProxy::DispositionForNavigationAction(
+WebKit::WebNavigationPolicy WebViewProxy::PolicyForNavigationAction(
       ::WebView* webview,
       WebFrame* frame,
       const WebKit::WebURLRequest& request,
       WebKit::WebNavigationType type,
-      WindowOpenDisposition disposition,
+      WebKit::WebNavigationPolicy default_policy,
       bool is_redirect)
 {
 	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginNavigate(parent, request.url().spec(), frame->GetName()));
 
 	  // TODO - implement whitelisting/blackliting
 
-	return CURRENT_TAB;
+	return default_policy;
 }
 
 // FrameLoadDelegate -------------------------------------------------------
@@ -1087,7 +1090,7 @@ void WebViewProxy::RunFileChooser(bool multi_select,
 // @param edit_flags Which edit operations the renderer believes are available
 // @param frame_encoding Which indicates the encoding of current focused
 // sub frame.
-void WebViewProxy::ShowContextMenu(::WebView* webview, ContextNode node, int x, int y, const GURL& link_url, const GURL& image_url,
+void WebViewProxy::ShowContextMenu(::WebView* webview, ContextNodeType node, int x, int y, const GURL& link_url, const GURL& image_url,
 	const GURL& page_url, const GURL& frame_url, const std::wstring& selection_text, const std::wstring& misspelled_word, int edit_flags, 
 	const std::string& security_info, const std::string& frame_encoding)
 {
@@ -1185,15 +1188,6 @@ void WebViewProxy::DidDownloadImage(int id, const GURL& image_url, bool errored,
 }
 
 
-// If providing an alternate error page (like link doctor), returns the URL
-// to fetch instead.  If an invalid url is returned, just fall back on local
-// error pages. |error_name| tells the delegate what type of error page we
-// want (e.g., 404 vs dns errors).
-GURL WebViewProxy::GetAlternateErrorPageURL(const GURL& failedURL, ErrorPageType error_type)
-{
-	return GURL();
-}
-
 // History Related ---------------------------------------------------------
 
 // Returns the session history entry at a distance |offset| relative to the
@@ -1289,14 +1283,8 @@ void WebViewProxy::TransitionToCommittedForNewPage()
 
 // BEGIN WEBWIDGET_DELEGATE
 
-// Returns the view in which the WebWidget is embedded.
-gfx::NativeViewId WebViewProxy::GetContainingView(WebWidget* webwidget)
-{
-	return NULL;
-}
-
 // Called when a region of the WebWidget needs to be re-painted.
-void WebViewProxy::DidInvalidateRect(WebWidget* webwidget, const WebKit::WebRect& rect)
+void WebViewProxy::didInvalidateRect(const WebKit::WebRect& rect)
 {
 	gfx::Rect clientRect(width, height);
 	dirtyArea = clientRect.Intersect(dirtyArea.Union(rect));
@@ -1310,7 +1298,7 @@ void WebViewProxy::DidInvalidateRect(WebWidget* webwidget, const WebKit::WebRect
 
 // Called when a region of the WebWidget, given by clip_rect, should be
 // scrolled by the specified dx and dy amounts.
-void WebViewProxy::DidScrollRect(WebWidget* webwidget, int dx, int dy, const WebKit::WebRect& clip_rect)
+void WebViewProxy::didScrollRect(int dx, int dy, const WebKit::WebRect& clip_rect)
 {
 	if(parent && dirtyArea.IsEmpty() && !isPopupsDirty)
 		parent->setDirty();
@@ -1319,46 +1307,38 @@ void WebViewProxy::DidScrollRect(WebWidget* webwidget, int dx, int dy, const Web
 	needsPainting = true;
 
 	for(std::vector<PopupWidget*>::iterator i = popups.begin(); i != popups.end(); i++)
-		(*i)->DidScrollWebView(dx, dy);
+		(*i)->didScrollWebView(dx, dy);
 
 	isPopupsDirty = true;
-}
-
-// This method is called to instruct the window containing the WebWidget to
-// show itself as the topmost window.  This method is only used after a
-// successful call to CreateWebWidget.  |disposition| indicates how this new
-// window should be displayed, but generally only means something for WebViews.
-void WebViewProxy::Show(WebWidget* webwidget, WindowOpenDisposition disposition)
-{
 }
 
 // This method is called to instruct the window containing the WebWidget to
 // close.  Note: This method should just be the trigger that causes the
 // WebWidget to eventually close.  It should not actually be destroyed until
 // after this call returns.
-void WebViewProxy::CloseWidgetSoon(WebWidget* webwidget)
+void WebViewProxy::closeWidgetSoon()
 {
 }
 
 // This method is called to focus the window containing the WebWidget so
 // that it receives keyboard events.
-void WebViewProxy::Focus(WebWidget* webwidget)
+void WebViewProxy::didFocus()
 {
-	view->SetFocus(true);
+	view->setFocus(true);
 	checkKeyboardFocus();
 }
 
 // This method is called to unfocus the window containing the WebWidget so that
 // it no longer receives keyboard events.
-void WebViewProxy::Blur(WebWidget* webwidget)
+void WebViewProxy::didBlur()
 {
-	view->SetFocus(false);
+	view->setFocus(false);
 	checkKeyboardFocus();
 }
 
-void WebViewProxy::SetCursor(WebWidget* webwidget, const WebCursor& cursor)
+void WebViewProxy::didChangeCursor(const WebKit::WebCursorInfo& cursor)
 {
-	if(!cursor.IsEqual(curCursor))
+	if(cursor.type!=curCursor.type)
 	{
 		curCursor = cursor;
 #if defined(WIN32)
@@ -1368,9 +1348,9 @@ void WebViewProxy::SetCursor(WebWidget* webwidget, const WebCursor& cursor)
 }
 
 // Returns the rectangle of the WebWidget in screen coordinates.
-void WebViewProxy::GetWindowRect(WebWidget* webwidget, WebKit::WebRect* rect)
+WebKit::WebRect WebViewProxy::windowRect()
 {
-	*rect = WebKit::WebRect(0, 0, width, height);
+	return WebKit::WebRect(0, 0, width, height);
 }
 
 // This method is called to re-position the WebWidget on the screen.  The given
@@ -1379,36 +1359,26 @@ void WebViewProxy::GetWindowRect(WebWidget* webwidget, WebKit::WebRect* rect)
 // has been called.
 // TODO(darin): this is more of a request; does this need to take effect
 // synchronously?
-void WebViewProxy::SetWindowRect(WebWidget* webwidget, const WebKit::WebRect& rect)
+void WebViewProxy::setWindowRect(const WebKit::WebRect& rect)
 {
 }
 
 // Returns the rectangle of the window in which this WebWidget is embeded in.
-void WebViewProxy::GetRootWindowRect(WebWidget* webwidget, WebKit::WebRect* rect)
+WebKit::WebRect WebViewProxy::rootWindowRect()
 {
-	*rect = WebKit::WebRect(0, 0, width, height);
+	return WebKit::WebRect(0, 0, width, height);
 }
 
-void WebViewProxy::GetRootWindowResizerRect(WebWidget* webwidget, WebKit::WebRect* rect)
+WebKit::WebRect WebViewProxy::windowResizerRect()
 {
+	return windowRect();
 }
 
 // Keeps track of the necessary window move for a plugin window that resulted
 // from a scroll operation.  That way, all plugin windows can be moved at the
 // same time as each other and the page.
-void WebViewProxy::DidMove(WebWidget* webwidget, const WebPluginGeometry& move)
+void WebViewProxy::DidMovePlugin(const WebPluginGeometry& move)
 {
-}
-
-// Suppress input events to other windows, and do not return until the widget
-// is closed.  This is used to support |window.showModalDialog|.
-void WebViewProxy::RunModal(WebWidget* webwidget)
-{
-}
-
-bool WebViewProxy::IsHidden(WebWidget* webwidget)
-{
-	return false;
 }
 
 void WebViewProxy::handleMouseEvent(WebKit::WebInputEvent::Type type, short buttonID)
@@ -1463,12 +1433,12 @@ void WebViewProxy::handleMouseEvent(WebKit::WebInputEvent::Type type, short butt
 			event.x = localX;
 			event.y = localY;
 
-			if((*i)->getWidget()->HandleInputEvent(&event))
+			if((*i)->getWidget()->handleInputEvent(event))
 				return;
 		}
 	}
 
-	view->HandleInputEvent(&event);
+	view->handleInputEvent(event);
 
 	if(type != WebKit::WebInputEvent::MouseMove)
 		checkKeyboardFocus();
@@ -1478,7 +1448,7 @@ void WebViewProxy::closeAllPopups()
 {
 	for(std::vector<PopupWidget*>::iterator i = popups.begin(); i != popups.end();)
 	{
-		(*i)->Release();
+		delete (*i);
 		i = popups.erase(i);	
 	}
 
@@ -1491,11 +1461,10 @@ void WebViewProxy::closePopup(PopupWidget* popup)
 	{
 		if((*i) == popup)
 		{
-			WebKit::WebRect winRect;
-			(*i)->GetWindowRect(0, &winRect);
-			DidInvalidateRect(0, winRect);
+			WebKit::WebRect winRect = (*i)->windowRect();
+			didInvalidateRect(winRect);
 
-			(*i)->Release();
+			delete (*i);
 			popups.erase(i);
 			invalidatePopups();
 
@@ -1640,18 +1609,18 @@ void WebViewProxy::updateSessionHistory(WebFrame* frame)
 	entry->SetContentItem(state);
 }
 
-
-// PRHFIXME: Unimplemented:
-WebKit::WebScreenInfo WebViewProxy::GetScreenInfo(WebWidget * webwidget) {
+WebKit::WebScreenInfo WebViewProxy::screenInfo() {
 	WebKit::WebScreenInfo ret;
-	ret.availableRect = WebKit::WebRect(0,0,1024,768); // PRHFIXME: Huge hack, hardcode some screen size here.
+	ret.availableRect = WebKit::WebRect(0,0,1024,768); // PRHFIXME: Huge hack, hardcode some screen 
 	ret.depth = 24;
 	ret.isMonochrome = false;
 	ret.depthPerComponent = 8;
 	ret.rect = WebKit::WebRect(0,0,1024,768);
 	return ret;
 }
+void WebViewProxy::runModal()
+{
+}
 
-void WebViewProxy::ShowAsPopupWithItems(WebWidget *webwidget,const WebKit::WebRect &,int,int,const std::vector<WebMenuItem> &) {
-	Show(webwidget, NEW_POPUP); //PRHFIXME: what to do here?
+void WebViewProxy::show(WebKit::WebNavigationPolicy policy) {
 }

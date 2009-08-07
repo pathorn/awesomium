@@ -86,7 +86,7 @@ void Awesomium::copyBuffers(int width, int height, unsigned char* src, int srcRo
 	}
 }
 
-RenderBuffer::RenderBuffer(int width, int height) : width(0), height(0), buffer(0), rowSpan(0)
+RenderBuffer::RenderBuffer(int width, int height) : buffer(0), width(0), height(0), rowSpan(0)
 {
 	reserve(width, height);
 }

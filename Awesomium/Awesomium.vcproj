@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="base.lib base_gfx.lib breakpad_handler.lib googleurl.lib net.lib skia.lib gtest.lib libbzip2.lib icui18n.lib icuuc.lib libjpeg.lib libpng.lib libxml2.lib libxslt.lib modp_b64.lib zlib.lib pcre.lib activex_shim.lib WTF.lib v8.lib v8_base.lib WebCore.lib default_plugin.lib Glue.lib sdch.lib sqlite3.lib comctl32.lib rpcrt4.lib shlwapi.lib winmm.lib Usp10.lib Psapi.lib msimg32.lib version.lib Wininet.lib WebKit.lib urlmon.lib DbgHelp.lib Gdi32.lib"
+				AdditionalDependencies="base.lib base_gfx.lib breakpad_handler.lib googleurl.lib net.lib skia.lib gtest.lib libbzip2.lib icui18n.lib icuuc.lib libjpeg.lib libpng.lib libxml2.lib libxslt.lib modp_b64.lib zlib.lib pcre.lib activex_shim.lib WTF.lib v8_snapshot.lib v8_base.lib WebCore.lib default_plugin.lib Glue.lib sdch.lib sqlite3.lib comctl32.lib rpcrt4.lib shlwapi.lib winmm.lib Usp10.lib Psapi.lib msimg32.lib version.lib Wininet.lib WebKit.lib urlmon.lib DbgHelp.lib Gdi32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_d.dll"
 				AdditionalLibraryDirectories="..\..\chromium\chromium\src\chrome\Debug\lib"
 				IgnoreAllDefaultLibraries="false"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="base.lib base_gfx.lib breakpad_handler.lib googleurl.lib net.lib skia.lib gtest.lib libbzip2.lib icui18n.lib icuuc.lib libjpeg.lib libpng.lib libxml2.lib libxslt.lib modp_b64.lib zlib.lib pcre.lib activex_shim.lib WTF.lib v8.lib v8_base.lib WebCore.lib default_plugin.lib Glue.lib sdch.lib sqlite3.lib comctl32.lib rpcrt4.lib shlwapi.lib winmm.lib Usp10.lib Psapi.lib msimg32.lib version.lib Wininet.lib WebKit.lib urlmon.lib DbgHelp.lib Gdi32.lib"
+				AdditionalDependencies="base.lib base_gfx.lib breakpad_handler.lib googleurl.lib net.lib skia.lib gtest.lib libbzip2.lib icui18n.lib icuuc.lib libjpeg.lib libpng.lib libxml2.lib libxslt.lib modp_b64.lib zlib.lib pcre.lib activex_shim.lib WTF.lib v8_snapshot.lib v8_base.lib WebCore.lib default_plugin.lib Glue.lib sdch.lib sqlite3.lib comctl32.lib rpcrt4.lib shlwapi.lib winmm.lib Usp10.lib Psapi.lib msimg32.lib version.lib Wininet.lib WebKit.lib urlmon.lib DbgHelp.lib Gdi32.lib"
 				AdditionalLibraryDirectories="..\..\chromium\chromium\src\chrome\Release\lib"
 			/>
 			<Tool

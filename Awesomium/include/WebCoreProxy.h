@@ -54,11 +54,19 @@ public:
 	
 	void pause();
 	void resume();
+
+	bool sandboxEnabled();
 	
 	WebKit::WebMimeRegistry* mimeRegistry();
 	
 	WebKit::WebSandboxSupport* sandboxSupport();
 	
+	WebKit::WebMessagePortChannel* createMessagePortChannel();
+
+	WebKit::WebStorageNamespace* createLocalStorageNamespace(const WebKit::WebString& path);
+
+	WebKit::WebStorageNamespace* createSessionStorageNamespace();
+
 	uint64 visitedLinkHash(const char* canonicalURL, size_t length);
 	
 	bool isLinkVisited(uint64 linkHash);
@@ -70,8 +78,6 @@ public:
 	
 	void prefetchHostName(const WebKit::WebString&);
 
-	bool getFileSize(const WebKit::WebString& path, long long& result);
-	
 	WebKit::WebData loadResource(const char* name);
 	
 	WebKit::WebString defaultLocale();

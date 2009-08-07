@@ -75,7 +75,7 @@ bool Awesomium::Rect::isEmpty() const
 }
 
 Awesomium::WebView::WebView(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, base::Thread* coreThread)
-: listener(0), dirtiness(false), isKeyboardFocused(false), enableAsyncRendering(enableAsyncRendering), coreThread(coreThread)
+: coreThread(coreThread), listener(0), dirtiness(false), isKeyboardFocused(false), enableAsyncRendering(enableAsyncRendering)
 {
 	viewProxy = new WebViewProxy(width, height, isTransparent, enableAsyncRendering, maxAsyncRenderPerSec, this);
 	viewProxy->AddRef();
