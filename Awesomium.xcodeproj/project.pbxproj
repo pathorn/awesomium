@@ -70,7 +70,7 @@
 		8D07F2BE0486CC7A007CD1D0 /* Awesomium_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32BAE0B70371A74B00C91783 /* Awesomium_Prefix.pch */; };
 		8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		CD7C1E490FEA1FB300D3447A /* libv8_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE713260FE5019100CDA83D /* libv8_base.a */; };
-		CD7C1E4D0FEA1FE300D3447A /* libv8_snapshot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE7132C0FE5019100CDA83D /* libv8_snapshot.a */; };
+		CD7C1E4D0FEA1FE300D3447A /* libv8_snapshot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD3F27FD102C218D00C0637F /* libv8_snapshot.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -486,6 +486,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 26273B5082FD9E2952EA55E6;
 			remoteInfo = v8_base;
+		};
+		CD3F27FC102C218D00C0637F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EA65271C3D0F7C3383C07B9B;
+			remoteInfo = v8_snapshot;
 		};
 		CDE713270FE5019100CDA83D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -960,7 +967,7 @@
 				CDE713260FE5019100CDA83D /* libv8_base.a */,
 				CDE713280FE5019100CDA83D /* libv8_nosnapshot.a */,
 				CDE7132A0FE5019100CDA83D /* mksnapshot */,
-				CDE7132C0FE5019100CDA83D /* libv8_snapshot.a */,
+				CD3F27FD102C218D00C0637F /* libv8_snapshot.a */,
 				CDE7132E0FE5019100CDA83D /* v8_shell */,
 				CDE713300FE5019100CDA83D /* d8 */,
 				CDE713320FE5019100CDA83D /* libv8_arm.a */,
@@ -1542,11 +1549,11 @@
 			remoteRef = CDE713290FE5019100CDA83D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		CDE7132C0FE5019100CDA83D /* libv8_snapshot.a */ = {
+		CD3F27FD102C218D00C0637F /* libv8_snapshot.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libv8_snapshot.a;
-			remoteRef = CDE7132B0FE5019100CDA83D /* PBXContainerItemProxy */;
+			remoteRef = CD3F27FC102C218D00C0637F /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		CDE7132E0FE5019100CDA83D /* v8_shell */ = {
