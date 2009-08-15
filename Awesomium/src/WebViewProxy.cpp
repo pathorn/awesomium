@@ -724,7 +724,9 @@ WebKit::WebMediaPlayer* WebViewProxy::CreateWebMediaPlayer(WebKit::WebMediaPlaye
         webkit_glue::SimpleDataSource::CreateFactory(MessageLoop::current(),
                                                      bridge_factory));
   }*/
-  return new webkit_glue::WebMediaPlayerImpl(client, factory);
+  factory->AddFactory(media::AudioRendererImpl::CreateFilterFactory());
+  webkit_glue::WebMediaPlayerImpl *impl = new webkit_glue::WebMediaPlayerImpl(client, factory);
+  return impl;
 }
 
 
