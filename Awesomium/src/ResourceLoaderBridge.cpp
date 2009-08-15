@@ -580,7 +580,7 @@ namespace webkit_glue {
 																									  request_context->proxy_service()));
 		
 		net::ProxyInfo proxy_info;
-		int rv = sync_proxy_service->ResolveProxy(url, &proxy_info);
+		int rv = sync_proxy_service->ResolveProxy(url, &proxy_info, NULL);
 		if (rv == net::OK) {
 			*proxy_list = proxy_info.ToPacString();
 		}

@@ -39,6 +39,7 @@
 #include "WebDataSource.h"
 #include "WebURLResponse.h"
 #include "net/base/base64.h"
+#include "skia/ext/platform_canvas.h"
 #include <assert.h>
 
 #ifdef _WIN32
@@ -60,6 +61,10 @@ typedef WebKit::WebURLError WebError;
 
 // Defined in WebkitGlue.cpp:
 std::wstring stringToWide(const std::string &stringToConvert);
+
+static std::wstring WebStringToWString(const WebKit::WebString &str) {
+    return stringToWide(webkit_glue::WebStringToStdString(str));
+}
 
 WebViewProxy::WebViewProxy(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, Awesomium::WebView* parent)
 : refCount(0), width(width), height(height), canvas(0),
@@ -123,8 +128,8 @@ void WebViewProxy::asyncShutdown()
 
 	closeAllPopups();
 
-	view->GetMainFrame()->CallJSGC();
-	view->GetMainFrame()->CallJSGC();
+	view->GetMainFrame()->collectGarbage();
+	view->GetMainFrame()->collectGarbage();
 
 	delete clientObject;
 
@@ -138,7 +143,7 @@ void WebViewProxy::asyncShutdown()
 
 void WebViewProxy::loadURL(const std::string& url, const std::wstring& frameName, const std::string& username, const std::string& password)
 {
-	std::wstring frame = view->GetMainFrame()->GetName();
+	std::wstring frame = WebStringToWString(view->GetMainFrame()->name());
 	if(frameName.length())
 		if(view->GetFrameWithName(frameName))
 			frame = frameName;
@@ -150,7 +155,7 @@ void WebViewProxy::loadHTML(const std::string& html, const std::wstring& frameNa
 {
 	std::string baseDirectory = Awesomium::WebCore::Get().getBaseDirectory();
 
-	std::wstring frame = view->GetMainFrame()->GetName();
+	std::wstring frame = WebStringToWString(view->GetMainFrame()->name());
 	if(frameName.length())
 		if(view->GetFrameWithName(frameName))
 			frame = frameName;
@@ -184,7 +189,7 @@ void WebViewProxy::executeJavascript(const std::string& javascript, const std::w
 		return;
 
 	WebKit::WebURLRequest request(GURL("javascript:" + javascript + ";void(0);"));
-	frame->LoadRequest(request);
+	frame->loadRequest(request);
 }
 
 void WebViewProxy::setProperty(const std::string& name, const Awesomium::JSValue& value)
@@ -509,36 +514,42 @@ void WebViewProxy::injectKeyboardEvent(NSEvent* keyboardEvent)
 
 void WebViewProxy::cut()
 {
-	view->GetFocusedFrame()->Cut();
+    WebKit::WebUChar cmd[] = {'C','u','t'};
+	view->GetFocusedFrame()->executeCommand(WebKit::WebString(cmd, 3));
 }
 
 void WebViewProxy::copy()
 {
-	view->GetFocusedFrame()->Copy();
+    WebKit::WebUChar cmd[] = {'C','o','p','y'};
+	view->GetFocusedFrame()->executeCommand(WebKit::WebString(cmd, 4));
 }
 
 void WebViewProxy::paste()
 {
-	view->GetFocusedFrame()->Paste();
+    WebKit::WebUChar cmd[] = {'P','a','s','t','e'};
+	view->GetFocusedFrame()->executeCommand(WebKit::WebString(cmd, 5));
 }
 
 void WebViewProxy::selectAll()
 {
-	view->GetFocusedFrame()->SelectAll();
+    WebKit::WebUChar cmd[] = {'S','e','l','e','c','t','A','l','l'};
+	view->GetFocusedFrame()->executeCommand(WebKit::WebString(cmd, 9));
 }
 
 void WebViewProxy::deselectAll()
 {
-	view->GetFocusedFrame()->ClearSelection();
+    WebKit::WebUChar cmd[] = {'U','n','s','e','l','e','c','t'};
+	view->GetFocusedFrame()->executeCommand(WebKit::WebString(cmd, 8));
 }
 
 void WebViewProxy::getContentAsText(std::wstring* result, int maxChars)
 {
 	WebFrame* frame = view->GetMainFrame();
 
-	if(frame)
-		frame->GetContentAsPlainText(maxChars, result);
-
+	if(frame) {
+        WebKit::WebString text (frame->contentAsText(maxChars));
+        *result = WebStringToWString(text);
+    }
 	parent->setFinishGetContentText();
 }
 
@@ -647,7 +658,7 @@ void WebViewProxy::Release()
 
 	if(!lastTargetURL.is_empty())
 		MessageLoop::current()->PostTask(FROM_HERE, NewRunnableMethod(this, &WebViewProxy::loadURL, lastTargetURL.spec(), 
-			view->GetFocusedFrame()->GetName(), std::string(), std::string()));
+                                                                      WebStringToWString(view->GetFocusedFrame()->name()), std::string(), std::string()));
 
 	return NULL;
 }
@@ -744,7 +755,7 @@ WebKit::WebNavigationPolicy WebViewProxy::PolicyForNavigationAction(
       WebKit::WebNavigationPolicy default_policy,
       bool is_redirect)
 {
-	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginNavigate(parent, request.url().spec(), frame->GetName()));
+	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginNavigate(parent, request.url().spec(), WebStringToWString(frame->name())));
 
 	  // TODO - implement whitelisting/blackliting
 
@@ -761,7 +772,7 @@ WebKit::WebNavigationPolicy WebViewProxy::PolicyForNavigationAction(
 // an empty invalid GURL in other cases.
 void WebViewProxy::DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame* frame, NavigationGesture gesture)
 {
-	WebDataSource* dataSource = frame->GetProvisionalDataSource();
+	WebDataSource* dataSource = frame->provisionalDataSource();
 
 	if(dataSource)
 	{
@@ -820,27 +831,26 @@ void WebViewProxy::LoadNavigationErrorPage(WebFrame* frame, const WebKit::WebURL
 // to get the corresponding session history state.
 void WebViewProxy::DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bool is_new_navigation)
 {
-	WebDataSource* dataSource = frame->GetDataSource();
+	WebDataSource* dataSource = frame->dataSource();
 
 	if(dataSource)
 	{
 		std::string url = dataSource->request().url().spec();
 		int statusCode = dataSource->response().httpStatusCode();
-		std::string mimeTypeStr (webkit_glue::WebStringToStdString(dataSource->response().mimeType()));
-		std::wstring mimeType(stringToWide(mimeTypeStr));
+		std::wstring mimeType (WebStringToWString(dataSource->response().mimeType()));
 
-		LOG(INFO) << "Committed Load for Frame. URL: " << url << ", Status Code: " << statusCode << ", Mime-Type: " << mimeType << ", Frame Name: " << frame->GetName();
+		LOG(INFO) << "Committed Load for Frame. URL: " << url << ", Status Code: " << statusCode << ", Mime-Type: " << mimeType << ", Frame Name: " << frame->name();
 
-		Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginLoad(parent, url, frame->GetName(), statusCode, mimeType));
+		Awesomium::WebCore::Get().queueEvent(new WebViewEvents::BeginLoad(parent, url, WebStringToWString(frame->name()), statusCode, mimeType));
 
 		std::string responseFile;
 		Awesomium::WebCore::Get().getCustomResponsePage(statusCode, responseFile);
 		
 		if(responseFile.length())
-			MessageLoop::current()->PostTask(FROM_HERE, NewRunnableMethod(this, &WebViewProxy::loadFile, responseFile, frame->GetName()));
+			MessageLoop::current()->PostTask(FROM_HERE, NewRunnableMethod(this, &WebViewProxy::loadFile, responseFile, WebStringToWString(frame->name())));
 
-		if(frame->GetName().substr(0, 5) == L"OIFW_")
-			MessageLoop::current()->PostTask(FROM_HERE, NewRunnableMethod(this, &WebViewProxy::overrideIFrameWindow, frame->GetName()));
+		if(WebStringToWString(frame->name()).substr(0, 5) == L"OIFW_")
+			MessageLoop::current()->PostTask(FROM_HERE, NewRunnableMethod(this, &WebViewProxy::overrideIFrameWindow, WebStringToWString(frame->name())));
 	}
 
 	updateForCommittedLoad(frame, is_new_navigation);
@@ -855,7 +865,7 @@ void WebViewProxy::DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bo
 //  - (void)webView:(::WebView *)sender didReceiveTitle:(NSString *)title forFrame:(WebFrame *)frame;
 void WebViewProxy::DidReceiveTitle(::WebView* webview, const std::wstring& title, WebFrame* frame)
 {
-	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::ReceiveTitle(parent, title, frame->GetName()));
+	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::ReceiveTitle(parent, title, WebStringToWString(frame->name())));
 }
 
 //
@@ -1496,7 +1506,7 @@ void WebViewProxy::overrideIFrameWindow(const std::wstring& frameName)
 	if(frame)
 	{
 		WebKit::WebURLRequest request(GURL("javascript:window.self = window.top;void(0);"));
-		frame->LoadRequest(request);
+		frame->loadRequest(request);
 	}
 }
 
@@ -1521,7 +1531,7 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 
 	///////////////// SEE http://src.chromium.org/viewvc/chrome/trunk/src/webkit/tools/test_shell/test_shell.cc?r1=16747&r2=16746
 
-	view->GetMainFrame()->GetDataSource()->setExtraData(new NavigationExtraRequestData(entry->GetPageID()));
+	view->GetMainFrame()->dataSource()->setExtraData(new NavigationExtraRequestData(entry->GetPageID()));
 
 	std::string username, password;
 	entry->GetAuthorizationCredentials(username, password);
@@ -1543,9 +1553,9 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 	// back/forward navigations maintain the target frame?
 
 	if(entry->GetHTMLString().length())
-		frame->LoadHTMLString(entry->GetHTMLString(), entry->GetURL());
+		frame->loadHTMLString(entry->GetHTMLString(), entry->GetURL());
 	else
-		frame->LoadRequest(request);
+		frame->loadRequest(request);
 
 	view->SetFocusedFrame(frame);
 
@@ -1555,7 +1565,7 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 void WebViewProxy::updateForCommittedLoad(WebFrame* frame, bool is_new_navigation)
 {
 	//PRHFIXME: old code used view->GetMainFrame() instead of frame. Why?
-	NavigationExtraRequestData* extra_data = static_cast<NavigationExtraRequestData*>(frame->GetDataSource()->extraData());
+	NavigationExtraRequestData* extra_data = static_cast<NavigationExtraRequestData*>(frame->dataSource()->extraData());
 
 	if(is_new_navigation) 
 	{
@@ -1579,7 +1589,7 @@ void WebViewProxy::updateForCommittedLoad(WebFrame* frame, bool is_new_navigatio
 
 void WebViewProxy::updateURL(WebFrame* frame)
 {
-	WebDataSource* ds = frame->GetDataSource();
+	WebDataSource* ds = frame->dataSource();
 	DCHECK(ds);
 
 	const WebRequest& request = ds->request();
@@ -1613,7 +1623,7 @@ void WebViewProxy::updateSessionHistory(WebFrame* frame)
 	if(!entry)
 		return;
 
-	WebKit::WebHistoryItem state = view->GetMainFrame()->GetPreviousHistoryItem();
+	WebKit::WebHistoryItem state = view->GetMainFrame()->previousHistoryItem();
 	if (state.isNull())
 		return;
 

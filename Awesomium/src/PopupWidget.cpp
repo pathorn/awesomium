@@ -29,7 +29,7 @@
 #include "WebSize.h"
 #include "WebRect.h"
 #include "WebScreenInfo.h"
-
+#include "skia/ext/platform_canvas.h"
 PopupWidget::PopupWidget(WebViewProxy* parent) : parent(parent), canvas(0)
 {
 	widget = WebKit::WebPopupMenu::create(this);

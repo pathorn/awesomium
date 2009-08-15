@@ -33,7 +33,6 @@
 #include <vector>
 #include "base/basictypes.h"
 #include "webkit/glue/webview.h"
-#include "webkit/glue/webframe.h"
 #include "WebCursorInfo.h"
 #include "WebURLRequest.h"
 #include "WebNavigationType.h"
@@ -51,6 +50,7 @@
 #include "base/timer.h"
 #include "base/lock.h"
 
+using WebKit::WebFrame;
 class NavigationEntry;
 class NavigationController;
 

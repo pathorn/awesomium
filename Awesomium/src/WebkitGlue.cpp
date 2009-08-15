@@ -224,10 +224,10 @@ bool SpellCheckWord(const wchar_t* word, int word_len, int* misspelling_start, i
 	return true;
 }
 
-bool GetPlugins(bool refresh, std::vector<WebPluginInfo>* plugins)
+void GetPlugins(bool refresh, std::vector<WebPluginInfo>* plugins)
 {
 //#if defined(WIN32)
-	return NPAPI::PluginList::Singleton()->GetPlugins(refresh, plugins);
+	NPAPI::PluginList::Singleton()->GetPlugins(refresh, plugins);
 //#else
 //	return false;
 //#endif
