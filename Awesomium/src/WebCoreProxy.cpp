@@ -31,7 +31,9 @@
 #include "WebData.h"
 #include "WebClipboard.h"
 #include <assert.h>
+#include "media/base/media.h"
 #include "base/string_util.h"
+#include "base/path_service.h"
 #if defined(WIN32)
 #include "base/resource_util.h"
 #include "net/base/net_module.h"
@@ -92,6 +94,16 @@ WebCoreProxy::WebCoreProxy(base::Thread* coreThread, bool pluginsEnabled) : core
 	webclipboard = new Clipboard(this);
 
 	WebKit::initialize(this);
+	FilePath module_path;
+	bool initialized_media_library =
+		PathService::Get(base::DIR_MODULE, &module_path) &&
+		media::InitializeMediaLibrary(module_path);
+	if (initialized_media_library) {
+		LOG(INFO) << "Media library successfully initialized";
+		WebKit::enableMediaPlayer();
+	} else {
+		LOG(ERROR) << "Failed to initialize media library! Check that avcodec, avutil and avformat are in the same directory as the executable.";
+	}
 }
 
 WebCoreProxy::~WebCoreProxy()

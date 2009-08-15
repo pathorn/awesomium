@@ -42,6 +42,16 @@
 #include "skia/ext/platform_canvas.h"
 #include <assert.h>
 
+#include "webkit/glue/media/buffered_data_source.h"
+#include "webkit/glue/webappcachecontext.h"
+#include "base/process_util.h"
+#include "media/base/media.h"
+#include "media/base/media_format.h"
+#include "media/base/factory.h"
+#include "media/filters/audio_renderer_impl.h"
+#include "webkit/glue/webmediaplayer_impl.h"
+#include "webkit/glue/media/media_resource_loader_bridge_factory.h"
+
 #ifdef _WIN32
 #include "win/WebInputEventFactory.h"
 #else
@@ -681,6 +691,42 @@ WebWidget* WebViewProxy::CreatePopupWidget(::WebView* webview, bool focus_on_sho
 	popups.push_back(popup);
 	return popup->getWidget();
 }
+
+WebKit::WebMediaPlayer* WebViewProxy::CreateWebMediaPlayer(WebKit::WebMediaPlayerClient* client)
+{
+  scoped_refptr<media::FilterFactoryCollection> factory =
+      new media::FilterFactoryCollection();
+  // Add in any custom filter factories first.
+/*
+#ifndef DISABLE_AUDIO
+    // Add the chrome specific audio renderer.
+    factory->AddFactory(
+        media::AudioRendererImpl::CreateFilterFactory(audio_message_filter()));
+#endif
+*/
+
+  // TODO(hclam): obtain the following parameters from |client|.
+  webkit_glue::MediaResourceLoaderBridgeFactory* bridge_factory =
+      new webkit_glue::MediaResourceLoaderBridgeFactory(
+          GURL::EmptyGURL(),  // referrer
+          "null",             // frame origin
+          "null",             // main_frame_origin
+          base::GetCurrentProcId(),
+          WebAppCacheContext::kNoAppCacheContextId,
+          0);//routing_id
+
+    // Add the chrome specific media data source.
+    factory->AddFactory(
+        webkit_glue::BufferedDataSource::CreateFactory(MessageLoop::current(),
+                                                       bridge_factory));
+/*  } else {
+    factory->AddFactory(
+        webkit_glue::SimpleDataSource::CreateFactory(MessageLoop::current(),
+                                                     bridge_factory));
+  }*/
+  return new webkit_glue::WebMediaPlayerImpl(client, factory);
+}
+
 
 // This method is called to create a WebPluginDelegate implementation when a
 // new plugin is instanced.  See webkit_glue::CreateWebPluginDelegateHelper

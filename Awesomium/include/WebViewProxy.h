@@ -173,6 +173,8 @@ public:
 	WebWidget* CreatePopupWidgetWithInfo(::WebView* webview, const WebKit::WebPopupMenuInfo& popup_info);
 	WebWidget* CreatePopupWidget(::WebView* webview, bool focus_on_show);
 
+	WebKit::WebMediaPlayer* CreateWebMediaPlayer(WebKit::WebMediaPlayerClient* client);
+
 	WebPluginDelegate* CreatePluginDelegate(::WebView* webview, const GURL& url, const std::string& mime_type,
 		const std::string& clsid, std::string* actual_mime_type);
 
