@@ -28,7 +28,7 @@
 
 #include "PlatformUtils.h"
 #include "WebView.h"
-#include <queue>
+#include <deque>
 #include <vector>
 #include <string>
 
@@ -196,7 +196,7 @@ protected:
 	WebCoreProxy* coreProxy;
 	base::AtExitManager* atExitMgr;
 	std::vector<WebView*> views;
-	std::queue<WebViewEvent*> eventQueue;
+	std::deque<WebViewEvent*> eventQueue; // treat as std::queue, missing swap().
 	std::map<int, std::string> customResponsePageMap;
 	std::string baseDirectory;
 	bool logOpen;

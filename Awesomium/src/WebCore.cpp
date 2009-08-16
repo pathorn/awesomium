@@ -170,16 +170,20 @@ void WebCore::setCustomResponsePage(int statusCode, const std::string& filePath)
 void WebCore::update()
 {
 	messageLoop->RunAllPending();
-	
-	AutoLock autoQueueLock(*eventQueueLock);
+	std::deque<WebViewEvent*> eventQueueCopy;
 
-	while(!eventQueue.empty())
 	{
-		WebViewEvent* event = eventQueue.front();
+		AutoLock autoQueueLock(*eventQueueLock);
+		eventQueue.swap(eventQueueCopy);
+	}
+
+	while(!eventQueueCopy.empty())
+	{
+		WebViewEvent* event = eventQueueCopy.front();
 		event->run();
 		delete event;
 
-		eventQueue.pop();
+		eventQueueCopy.pop_front();
 	}
 }
 
@@ -214,7 +218,7 @@ void WebCore::queueEvent(WebViewEvent* event)
 {
 	AutoLock autoQueueLock(*eventQueueLock);
 
-	eventQueue.push(event);
+	eventQueue.push_front(event);
 }
 
 void WebCore::removeWebView(WebView* view)
