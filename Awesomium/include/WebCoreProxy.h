@@ -67,9 +67,9 @@ public:
 
 	WebKit::WebStorageNamespace* createSessionStorageNamespace();
 
-	uint64 visitedLinkHash(const char* canonicalURL, size_t length);
+	unsigned long long visitedLinkHash(const char* canonicalURL, size_t length);
 	
-	bool isLinkVisited(uint64 linkHash);
+	bool isLinkVisited(unsigned long long linkHash);
 	
 	void setCookies(const WebKit::WebURL& url, const WebKit::WebURL& policy_url,
 					const WebKit::WebString& value);

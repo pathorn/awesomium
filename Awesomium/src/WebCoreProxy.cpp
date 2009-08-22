@@ -163,12 +163,12 @@ WebKit::WebSandboxSupport* WebCoreProxy::sandboxSupport()
     return NULL;
 }
 
-uint64 WebCoreProxy::visitedLinkHash(const char* canonicalURL, size_t length)
+unsigned long long WebCoreProxy::visitedLinkHash(const char* canonicalURL, size_t length)
 {
     return 0;
 }
 
-bool WebCoreProxy::isLinkVisited(uint64 linkHash)
+bool WebCoreProxy::isLinkVisited(unsigned long long linkHash)
 {
     return false;
 }

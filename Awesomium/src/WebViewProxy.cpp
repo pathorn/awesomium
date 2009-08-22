@@ -43,7 +43,7 @@
 #include <assert.h>
 
 #include "webkit/glue/media/buffered_data_source.h"
-#include "webkit/glue/webappcachecontext.h"
+#include "webkit/appcache/appcache_interfaces.h"
 #include "base/process_util.h"
 #include "media/base/media.h"
 #include "media/base/media_format.h"
@@ -115,7 +115,8 @@ WebViewProxy::~WebViewProxy()
 
 void WebViewProxy::asyncStartup()
 {
-	view = ::WebView::Create(this, WebPreferences());
+	view = ::WebView::Create();
+	view->InitializeMainFrame(this);
 	view->resize(WebKit::WebSize(width, height));
 	clientObject = new ClientObject(parent);
 
@@ -712,7 +713,7 @@ WebKit::WebMediaPlayer* WebViewProxy::CreateWebMediaPlayer(WebKit::WebMediaPlaye
           "null",             // frame origin
           "null",             // main_frame_origin
           base::GetCurrentProcId(),
-          WebAppCacheContext::kNoAppCacheContextId,
+          appcache::kNoCacheId,
           0);//routing_id
 
     // Add the chrome specific media data source.
@@ -1485,10 +1486,12 @@ void WebViewProxy::handleMouseEvent(WebKit::WebInputEvent::Type type, short butt
 		}
 		if (type == WebKit::WebInputEvent::MouseDown) {
 			buttonState |= buttonChangeMask;
-			event.clickCount = 1;
 		} else {
 			buttonState &= (~buttonChangeMask);
 		}
+	}
+	if (buttonState) {
+		event.clickCount = 1;
 	}
 
 	for(std::vector<PopupWidget*>::reverse_iterator i = popups.rbegin(); i != popups.rend(); i++)

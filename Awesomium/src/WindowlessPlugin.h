@@ -360,7 +360,7 @@ public:
 	}
 
 	// Receives notification about data being available. 
-	void DidReceiveManualResponse(const std::string& url, const std::string& mime_type, const std::string& headers, uint32 expected_length, uint32 last_modified)
+	void DidReceiveManualResponse(const GURL& url, const std::string& mime_type, const std::string& headers, uint32 expected_length, uint32 last_modified)
 	{
 		pluginInstance->DidReceiveManualResponse(url, mime_type, headers, expected_length, last_modified);
 	}
@@ -393,7 +393,7 @@ public:
 	void InstallMissingPlugin() {}
 
 	// Creates a WebPluginResourceClient instance and returns the same.
-	WebPluginResourceClient* CreateResourceClient(int resource_id, const std::string &url, bool notify_needed, intptr_t notify_data, intptr_t existing_stream)
+	WebPluginResourceClient* CreateResourceClient(int resource_id, const GURL &url, bool notify_needed, intptr_t notify_data, intptr_t existing_stream)
 	{
 		if(existing_stream)
 		{
@@ -404,7 +404,7 @@ public:
 		}
 
 		if(notify_needed)
-			pluginInstance->SetURLLoadData(GURL(url.c_str()), notify_data);
+			pluginInstance->SetURLLoadData(url, notify_data);
 
 		return pluginInstance->CreateStream(resource_id, url, "", notify_needed, (void*)notify_data);
 	}

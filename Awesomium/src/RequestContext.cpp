@@ -37,10 +37,11 @@ void TestShellRequestContext::Init(
 	*/
 	proxy_service_ = net::ProxyService::CreateNull(); //PRHFIXME: Ideally shouldn't be null.
 	net::HttpCache *cache;
+	net::SSLConfigService *ssl_config_service = net::SSLConfigService::CreateSystemSSLConfigService();
 	if (cache_path.empty()) {
-		cache = new net::HttpCache(net::CreateSystemHostResolver(), proxy_service_, 0);
+		cache = new net::HttpCache(net::CreateSystemHostResolver(), proxy_service_, ssl_config_service, 0);
 	} else {
-		cache = new net::HttpCache(net::CreateSystemHostResolver(), proxy_service_, cache_path, 0);
+		cache = new net::HttpCache(net::CreateSystemHostResolver(), proxy_service_, ssl_config_service, cache_path, 0);
 	}
 	cache->set_mode(cache_mode);
 	http_transaction_factory_ = cache;
