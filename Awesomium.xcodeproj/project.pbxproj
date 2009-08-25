@@ -40,7 +40,6 @@
 		6915D80F0F55E7F7003511B7 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6915D8090F55E7F7003511B7 /* SystemConfiguration.framework */; };
 		6915D8100F55E7F7003511B7 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6915D80A0F55E7F7003511B7 /* Carbon.framework */; };
 		6961FF480F774F4100E6E78F /* InitMacApplication.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6961FF470F774F4100E6E78F /* InitMacApplication.mm */; };
-		6973F92A0F5C47CD00848DA6 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6973F88A0F5C47C600848DA6 /* libgtest.a */; };
 		6973F92C0F5C47DA00848DA6 /* libbrowser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6973F89D0F5C47C600848DA6 /* libbrowser.a */; };
 		6973F92D0F5C47DA00848DA6 /* libcommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6973F89F0F5C47C600848DA6 /* libcommon.a */; };
 		6973F92F0F5C47DF00848DA6 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6973F8AA0F5C47C600848DA6 /* libz.a */; };
@@ -71,6 +70,10 @@
 		8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		CD7C1E490FEA1FB300D3447A /* libv8_base.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CDE713260FE5019100CDA83D /* libv8_base.a */; };
 		CD7C1E4D0FEA1FE300D3447A /* libv8_snapshot.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD3F27FD102C218D00C0637F /* libv8_snapshot.a */; };
+		CD9714231042706800550A06 /* libmedia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD9714121042704900550A06 /* libmedia.a */; };
+		CD9714241042707500550A06 /* libffmpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD9714221042705A00550A06 /* libffmpeg.a */; };
+		CD9714271042708700550A06 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD9714261042708700550A06 /* AudioToolbox.framework */; };
+		CD97142B1042708E00550A06 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD97142A1042708E00550A06 /* CoreAudio.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,13 +104,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 4D640CEB0EAE86BD00EBCFC0;
 			remoteInfo = renderer;
-		};
-		6973F8A20F5C47C600848DA6 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = B5FDBFAE0EE4623000BEC6E6;
-			remoteInfo = ipc_tests;
 		};
 		6973F8A40F5C47C600848DA6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -263,13 +259,6 @@
 			remoteGlobalIDString = E49F18BF0E4CBAC200386AEC;
 			remoteInfo = base_unittests;
 		};
-		69E754950F6A4782006A045E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 39086A550E9ECE0C7AC60DF3;
-			remoteInfo = image_diff;
-		};
 		69E754A10F6A4782006A045E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6973F8700F5C47C600848DA6 /* libxml.xcodeproj */;
@@ -360,6 +349,111 @@
 			proxyType = 2;
 			remoteGlobalIDString = 21B3BBE31C9B54B4CF0E230F;
 			remoteInfo = icuuc;
+		};
+		CD3F27FC102C218D00C0637F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EA65271C3D0F7C3383C07B9B;
+			remoteInfo = v8_snapshot;
+		};
+		CD9713B51042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = A7D53715E937EFA66767FC09;
+			remoteInfo = worker;
+		};
+		CD9713B71042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 92EB0027404CC5FFF3F05935;
+			remoteInfo = automated_ui_tests;
+		};
+		CD9713B91042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = B1513EFADA91F5FB951FD0EA;
+			remoteInfo = chrome_dll;
+		};
+		CD9713BB1042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D2FE39CFC044AEBF79A0C446;
+			remoteInfo = helper_app;
+		};
+		CD9713BD1042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F62418F97D1A96732F6BFBA9;
+			remoteInfo = interpose_dependency_shim;
+		};
+		CD9713BF1042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D6B4E96144F6DEC120A62037;
+			remoteInfo = plugin_carbon_interpose;
+		};
+		CD9713D01042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8580F5C47C600848DA6 /* webkit.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 626637C2A8DB98084CB3D890;
+			remoteInfo = appcache;
+		};
+		CD9713F61042702D00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6973F8850F5C47C600848DA6 /* base.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E6CD4BA3BD730DB29CD85148;
+			remoteInfo = test_support_perf;
+		};
+		CD9714111042704900550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CD9714071042704900550A06 /* media.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 03DC658DB59EDF1CD4602EE7;
+			remoteInfo = media;
+		};
+		CD9714131042704900550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CD9714071042704900550A06 /* media.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0ABDB693889BB1CE26B8E135;
+			remoteInfo = media_unittests;
+		};
+		CD9714151042704900550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CD9714071042704900550A06 /* media.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 907120A6F7D1250EB555E0A3;
+			remoteInfo = media_bench;
+		};
+		CD9714171042704900550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CD9714071042704900550A06 /* media.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = B5AA2EFDFDDC5276B6ABAE16;
+			remoteInfo = wav_ola_test;
+		};
+		CD9714191042704900550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CD9714071042704900550A06 /* media.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = A2E18089C805B57EB9451071;
+			remoteInfo = qt_faststart;
+		};
+		CD9714211042705A00550A06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CD97141B1042705A00550A06 /* ffmpeg.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = B7D28300B8855035B9421221;
+			remoteInfo = ffmpeg;
 		};
 		CDB706420FEBA63F002FB857 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -487,13 +581,6 @@
 			remoteGlobalIDString = 26273B5082FD9E2952EA55E6;
 			remoteInfo = v8_base;
 		};
-		CD3F27FC102C218D00C0637F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = EA65271C3D0F7C3383C07B9B;
-			remoteInfo = v8_snapshot;
-		};
 		CDE713270FE5019100CDA83D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
@@ -508,47 +595,12 @@
 			remoteGlobalIDString = D031ED9682F21360344042FF;
 			remoteInfo = mksnapshot;
 		};
-		CDE7132B0FE5019100CDA83D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 408FFD791EAE871C9E9C97F3;
-			remoteInfo = v8;
-		};
 		CDE7132D0FE5019100CDA83D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 54AAC98E39F93801EC7A85DD;
 			remoteInfo = v8_shell;
-		};
-		CDE7132F0FE5019100CDA83D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 77026115AF2287CAF9E199C7;
-			remoteInfo = d8;
-		};
-		CDE713310FE5019100CDA83D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = BEF0C0CD07A8E53A500943E2;
-			remoteInfo = v8_arm;
-		};
-		CDE713330FE5019100CDA83D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 2750546C296656CAADB74E21;
-			remoteInfo = v8_shell_arm;
-		};
-		CDE713350FE5019100CDA83D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 69E757F90F6B8487006A045E /* v8.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C45B8DC3CAB77FD3DAB18862;
-			remoteInfo = d8_arm;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -610,6 +662,10 @@
 		69E757F90F6B8487006A045E /* v8.xcodeproj */ = {isa = PBXFileReference; explicitFileType = "wrapper.pb-project"; name = v8.xcodeproj; path = ../chromium/src/v8/tools/gyp/v8.xcodeproj; sourceTree = SOURCE_ROOT; };
 		8D07F2C70486CC7A007CD1D0 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D07F2C80486CC7A007CD1D0 /* Awesomium.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Awesomium.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CD9714071042704900550A06 /* media.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = media.xcodeproj; path = ../chromium/src/media/media.xcodeproj; sourceTree = SOURCE_ROOT; };
+		CD97141B1042705A00550A06 /* ffmpeg.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpeg.xcodeproj; path = ../chromium/src/third_party/ffmpeg/ffmpeg.xcodeproj; sourceTree = SOURCE_ROOT; };
+		CD9714261042708700550A06 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		CD97142A1042708E00550A06 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -617,12 +673,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CD9714241042707500550A06 /* libffmpeg.a in Frameworks */,
+				CD9714231042706800550A06 /* libmedia.a in Frameworks */,
 				6915D80C0F55E7F7003511B7 /* Cocoa.framework in Frameworks */,
 				6915D80D0F55E7F7003511B7 /* QuartzCore.framework in Frameworks */,
 				6915D80E0F55E7F7003511B7 /* Security.framework in Frameworks */,
 				6915D80F0F55E7F7003511B7 /* SystemConfiguration.framework in Frameworks */,
 				6915D8100F55E7F7003511B7 /* Carbon.framework in Frameworks */,
-				6973F92A0F5C47CD00848DA6 /* libgtest.a in Frameworks */,
 				6973F92C0F5C47DA00848DA6 /* libbrowser.a in Frameworks */,
 				6973F92D0F5C47DA00848DA6 /* libcommon.a in Frameworks */,
 				6973F92F0F5C47DF00848DA6 /* libz.a in Frameworks */,
@@ -651,6 +708,8 @@
 				69E758360F6B8918006A045E /* libwebkit.a in Frameworks */,
 				CD7C1E490FEA1FB300D3447A /* libv8_base.a in Frameworks */,
 				CD7C1E4D0FEA1FE300D3447A /* libv8_snapshot.a in Frameworks */,
+				CD9714271042708700550A06 /* AudioToolbox.framework in Frameworks */,
+				CD97142B1042708E00550A06 /* CoreAudio.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,6 +793,8 @@
 		6915D8050F55E7F7003511B7 /* External Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CD97142A1042708E00550A06 /* CoreAudio.framework */,
+				CD9714261042708700550A06 /* AudioToolbox.framework */,
 				6915D8060F55E7F7003511B7 /* Cocoa.framework */,
 				6915D8070F55E7F7003511B7 /* QuartzCore.framework */,
 				6915D8080F55E7F7003511B7 /* Security.framework */,
@@ -746,6 +807,8 @@
 		6973F84B0F5C47C600848DA6 /* Chromium Projects */ = {
 			isa = PBXGroup;
 			children = (
+				CD97141B1042705A00550A06 /* ffmpeg.xcodeproj */,
+				CD9714071042704900550A06 /* media.xcodeproj */,
 				69E757F30F6B8487006A045E /* googleurl.xcodeproj */,
 				69E757F60F6B8487006A045E /* icu38.xcodeproj */,
 				69E757F90F6B8487006A045E /* v8.xcodeproj */,
@@ -787,12 +850,12 @@
 				CDE712D10FE5010B00CDA83D /* libplugin.a */,
 				6973F8A10F5C47C600848DA6 /* librenderer.a */,
 				CDE712D30FE5010B00CDA83D /* libutility.a */,
+				CD9713B61042702D00550A06 /* libworker.a */,
 				CDB706430FEBA63F002FB857 /* Chromium.app */,
-				69E754960F6A4782006A045E /* image_diff */,
 				CDE712D50FE5010B00CDA83D /* libtest_support_common.a */,
 				CDE712D70FE5010B00CDA83D /* libtest_support_ui.a */,
 				CDE712D90FE5010B00CDA83D /* libtest_support_unit.a */,
-				6973F8A30F5C47C600848DA6 /* ipc_tests */,
+				CD9713B81042702D00550A06 /* automated_ui_tests */,
 				6973F8A50F5C47C600848DA6 /* ui_tests */,
 				6973F8A70F5C47C600848DA6 /* unit_tests */,
 				CDE712DB0FE5010B00CDA83D /* startup_tests */,
@@ -800,6 +863,10 @@
 				CDE712DF0FE5010B00CDA83D /* tab_switching_test */,
 				CDB706450FEBA63F002FB857 /* memory_test */,
 				CDB706470FEBA63F002FB857 /* url_fetch_test */,
+				CD9713BA1042702D00550A06 /* Chromium Framework.framework */,
+				CD9713BC1042702D00550A06 /* Chromium Helper.app */,
+				CD9713BE1042702D00550A06 /* interpose_dependency_shim */,
+				CD9713C01042702D00550A06 /* plugin_carbon_interpose.dylib */,
 				CDE712E10FE5010B00CDA83D /* browser_tests */,
 			);
 			name = Products;
@@ -820,6 +887,7 @@
 				6973F8B90F5C47C600848DA6 /* libpcre.a */,
 				6973F8BD0F5C47C600848DA6 /* libwebcore.a */,
 				69E754C90F6A4782006A045E /* libwebkit.a */,
+				CD9713D11042702D00550A06 /* libappcache.a */,
 				6973F8B50F5C47C600848DA6 /* libglue.a */,
 			);
 			name = Products;
@@ -930,6 +998,7 @@
 				6973F9270F5C47C600848DA6 /* libbase_gfx.a */,
 				6973F9290F5C47C600848DA6 /* base_unittests */,
 				CDE7130E0FE5010B00CDA83D /* libtest_support_base.a */,
+				CD9713F71042702D00550A06 /* libtest_support_perf.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -961,18 +1030,34 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		CD9714081042704900550A06 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CD9714121042704900550A06 /* libmedia.a */,
+				CD9714141042704900550A06 /* media_unittests */,
+				CD9714161042704900550A06 /* media_bench */,
+				CD9714181042704900550A06 /* wav_ola_test */,
+				CD97141A1042704900550A06 /* qt_faststart */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CD97141C1042705A00550A06 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CD9714221042705A00550A06 /* libffmpeg.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		CDE713170FE5019100CDA83D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CDE713260FE5019100CDA83D /* libv8_base.a */,
-				CDE713280FE5019100CDA83D /* libv8_nosnapshot.a */,
-				CDE7132A0FE5019100CDA83D /* mksnapshot */,
 				CD3F27FD102C218D00C0637F /* libv8_snapshot.a */,
+				CDE713280FE5019100CDA83D /* libv8_nosnapshot.a */,
+				CDE713260FE5019100CDA83D /* libv8_base.a */,
+				CDE7132A0FE5019100CDA83D /* mksnapshot */,
 				CDE7132E0FE5019100CDA83D /* v8_shell */,
-				CDE713300FE5019100CDA83D /* d8 */,
-				CDE713320FE5019100CDA83D /* libv8_arm.a */,
-				CDE713340FE5019100CDA83D /* v8_shell_arm */,
-				CDE713360FE5019100CDA83D /* d8_arm */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1050,6 +1135,10 @@
 					ProjectRef = 6973F8520F5C47C600848DA6 /* chrome.xcodeproj */;
 				},
 				{
+					ProductGroup = CD97141C1042705A00550A06 /* Products */;
+					ProjectRef = CD97141B1042705A00550A06 /* ffmpeg.xcodeproj */;
+				},
+				{
 					ProductGroup = 69E757F40F6B8487006A045E /* Products */;
 					ProjectRef = 69E757F30F6B8487006A045E /* googleurl.xcodeproj */;
 				},
@@ -1080,6 +1169,10 @@
 				{
 					ProductGroup = 6973F86E0F5C47C600848DA6 /* Products */;
 					ProjectRef = 6973F86D0F5C47C600848DA6 /* libxslt.xcodeproj */;
+				},
+				{
+					ProductGroup = CD9714081042704900550A06 /* Products */;
+					ProjectRef = CD9714071042704900550A06 /* media.xcodeproj */;
 				},
 				{
 					ProductGroup = 6973F86B0F5C47C600848DA6 /* Products */;
@@ -1148,13 +1241,6 @@
 			fileType = archive.ar;
 			path = librenderer.a;
 			remoteRef = 6973F8A00F5C47C600848DA6 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6973F8A30F5C47C600848DA6 /* ipc_tests */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = ipc_tests;
-			remoteRef = 6973F8A20F5C47C600848DA6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		6973F8A50F5C47C600848DA6 /* ui_tests */ = {
@@ -1311,13 +1397,6 @@
 			remoteRef = 6973F9280F5C47C600848DA6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		69E754960F6A4782006A045E /* image_diff */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = image_diff;
-			remoteRef = 69E754950F6A4782006A045E /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		69E754A20F6A4782006A045E /* libxml2.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1407,6 +1486,111 @@
 			fileType = archive.ar;
 			path = libicuuc.a;
 			remoteRef = 69E7580C0F6B8487006A045E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD3F27FD102C218D00C0637F /* libv8_snapshot.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libv8_snapshot.a;
+			remoteRef = CD3F27FC102C218D00C0637F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713B61042702D00550A06 /* libworker.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libworker.a;
+			remoteRef = CD9713B51042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713B81042702D00550A06 /* automated_ui_tests */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = automated_ui_tests;
+			remoteRef = CD9713B71042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713BA1042702D00550A06 /* Chromium Framework.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = "Chromium Framework.framework";
+			remoteRef = CD9713B91042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713BC1042702D00550A06 /* Chromium Helper.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Chromium Helper.app";
+			remoteRef = CD9713BB1042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713BE1042702D00550A06 /* interpose_dependency_shim */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = interpose_dependency_shim;
+			remoteRef = CD9713BD1042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713C01042702D00550A06 /* plugin_carbon_interpose.dylib */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.dylib";
+			path = plugin_carbon_interpose.dylib;
+			remoteRef = CD9713BF1042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713D11042702D00550A06 /* libappcache.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libappcache.a;
+			remoteRef = CD9713D01042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9713F71042702D00550A06 /* libtest_support_perf.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libtest_support_perf.a;
+			remoteRef = CD9713F61042702D00550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9714121042704900550A06 /* libmedia.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libmedia.a;
+			remoteRef = CD9714111042704900550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9714141042704900550A06 /* media_unittests */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = media_unittests;
+			remoteRef = CD9714131042704900550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9714161042704900550A06 /* media_bench */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = media_bench;
+			remoteRef = CD9714151042704900550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9714181042704900550A06 /* wav_ola_test */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = wav_ola_test;
+			remoteRef = CD9714171042704900550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD97141A1042704900550A06 /* qt_faststart */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = qt_faststart;
+			remoteRef = CD9714191042704900550A06 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		CD9714221042705A00550A06 /* libffmpeg.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libffmpeg.a;
+			remoteRef = CD9714211042705A00550A06 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		CDB706430FEBA63F002FB857 /* Chromium.app */ = {
@@ -1549,46 +1733,11 @@
 			remoteRef = CDE713290FE5019100CDA83D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		CD3F27FD102C218D00C0637F /* libv8_snapshot.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libv8_snapshot.a;
-			remoteRef = CD3F27FC102C218D00C0637F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		CDE7132E0FE5019100CDA83D /* v8_shell */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
 			path = v8_shell;
 			remoteRef = CDE7132D0FE5019100CDA83D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		CDE713300FE5019100CDA83D /* d8 */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = d8;
-			remoteRef = CDE7132F0FE5019100CDA83D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		CDE713320FE5019100CDA83D /* libv8_arm.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libv8_arm.a;
-			remoteRef = CDE713310FE5019100CDA83D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		CDE713340FE5019100CDA83D /* v8_shell_arm */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = v8_shell_arm;
-			remoteRef = CDE713330FE5019100CDA83D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		CDE713360FE5019100CDA83D /* d8_arm */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = d8_arm;
-			remoteRef = CDE713350FE5019100CDA83D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -1756,6 +1905,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_VERSION = 4.2;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -1770,6 +1920,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_VERSION = 4.2;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
