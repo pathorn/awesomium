@@ -27,6 +27,8 @@
 #define __POPUP_WIDGET_H__
 
 #include <string>
+#include "skia/ext/platform_canvas.h"
+#include "WebCanvas.h"
 #include "base/basictypes.h"
 #include "WebWidget.h"
 #include "WebWidgetClient.h"
@@ -37,6 +39,9 @@
 
 class WebViewProxy;
 using WebKit::WebWidget;
+
+
+WebKit::WebCanvas *SkiaCanvasToWebCanvas (skia::PlatformCanvas *canvas);
 
 class PopupWidget : public WebKit::WebWidgetClient
 {

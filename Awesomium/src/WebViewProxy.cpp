@@ -239,7 +239,7 @@ WebKit::WebRect WebViewProxy::render()
 	{
 		executeJavascript("document.body.style.backgroundColor = '#000000'");
 		view->layout();
-		view->paint(canvas, invalidArea);
+		view->paint(SkiaCanvasToWebCanvas(canvas), invalidArea);
 
 		int rowBytes, height, size;
 
@@ -257,7 +257,7 @@ WebKit::WebRect WebViewProxy::render()
 
 		executeJavascript("document.body.style.backgroundColor = '#FFFFFF'");
 		view->layout();
-		view->paint(canvas, invalidArea);
+		view->paint(SkiaCanvasToWebCanvas(canvas), invalidArea);
 		needsPainting = false;
 
 		{
@@ -383,7 +383,7 @@ void WebViewProxy::paint()
 	if(!dirtyArea.IsEmpty() && needsPainting)
 	{
 		view->layout();
-		view->paint(canvas, dirtyArea);
+		view->paint(SkiaCanvasToWebCanvas(canvas), dirtyArea);
 		needsPainting = false;
 	}
 }

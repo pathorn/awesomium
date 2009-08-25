@@ -30,6 +30,15 @@
 #include "WebRect.h"
 #include "WebScreenInfo.h"
 #include "skia/ext/platform_canvas.h"
+
+inline WebKit::WebCanvas *SkiaCanvasToWebCanvas (skia::PlatformCanvas *canvas) {
+#ifdef WEBKIT_USING_CG
+    return canvas->getTopPlatformDevice().GetBitmapContext();
+#else
+    return canvas;
+#endif
+}
+
 PopupWidget::PopupWidget(WebViewProxy* parent) : parent(parent), canvas(0)
 {
 	widget = WebKit::WebPopupMenu::create(this);
@@ -59,7 +68,7 @@ void PopupWidget::renderToWebView(Awesomium::RenderBuffer* context, bool isParen
 	if(!dirtyArea.IsEmpty())
 	{
 		widget->layout();
-		widget->paint(canvas, WebKit::WebRect(dirtyArea));
+		widget->paint(SkiaCanvasToWebCanvas(canvas), WebKit::WebRect(dirtyArea));
 		dirtyArea = gfx::Rect();
 	}
 
