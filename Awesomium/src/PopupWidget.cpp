@@ -32,7 +32,7 @@
 #include "skia/ext/platform_canvas.h"
 
 inline WebKit::WebCanvas *SkiaCanvasToWebCanvas (skia::PlatformCanvas *canvas) {
-#ifdef WEBKIT_USING_CG
+#ifndef WEBKIT_USING_SKIA
     return canvas->getTopPlatformDevice().GetBitmapContext();
 #else
     return canvas;
