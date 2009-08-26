@@ -116,6 +116,7 @@ WebViewProxy::~WebViewProxy()
 void WebViewProxy::asyncStartup()
 {
 	view = ::WebView::Create();
+	WebPreferences().Apply(view);
 	view->InitializeMainFrame(this);
 	view->resize(WebKit::WebSize(width, height));
 	clientObject = new ClientObject(parent);
