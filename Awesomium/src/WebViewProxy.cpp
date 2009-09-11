@@ -1442,7 +1442,7 @@ WebKit::WebRect WebViewProxy::rootWindowRect()
 
 WebKit::WebRect WebViewProxy::windowResizerRect()
 {
-	return windowRect();
+	return WebKit::WebRect();
 }
 
 // Keeps track of the necessary window move for a plugin window that resulted
