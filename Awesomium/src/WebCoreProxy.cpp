@@ -50,13 +50,13 @@ public:
 	Clipboard(WebCoreProxy *proxy) : proxy(proxy) {
 	}
 	typedef WebKit::WebString WebString;
-	bool isFormatAvailable(Format fmt) {
+	bool isFormatAvailable(Format fmt, Buffer buf) {
 		return false;
 	}
-	WebString readPlainText() {
+	WebString readPlainText(Buffer buf) {
 		return WebString();
 	}
-	WebString readHTML(WebKit::WebURL*weburl) {
+	WebString readHTML(Buffer buf, WebKit::WebURL*weburl) {
 		*weburl = WebKit::WebURL();
 		return WebString();
 	}

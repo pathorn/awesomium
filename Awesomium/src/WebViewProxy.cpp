@@ -28,6 +28,7 @@
 #include "WebCoreProxy.h"
 #include "WindowlessPlugin.h"
 #include "WebViewEvent.h"
+#include "WebPlugin.h"
 #include "WebSize.h"
 #include "WebScreenInfo.h"
 #include "NavigationController.h"
@@ -38,6 +39,7 @@
 #include "WebPopupMenuInfo.h"
 #include "WebDataSource.h"
 #include "WebURLResponse.h"
+#include "WebSettings.h"
 #include "net/base/base64.h"
 #include "skia/ext/platform_canvas.h"
 #include <assert.h>
@@ -50,6 +52,7 @@
 #include "media/base/factory.h"
 #include "media/filters/audio_renderer_impl.h"
 #include "webkit/glue/webmediaplayer_impl.h"
+#include "webkit/glue/webplugin_impl.h"
 #include "webkit/glue/media/media_resource_loader_bridge_factory.h"
 
 #ifdef _WIN32
@@ -69,12 +72,20 @@ typedef WebKit::WebURLResponse WebResponse;
 typedef WebKit::WebURLRequest WebRequest;
 typedef WebKit::WebURLError WebError;
 
+#define WebStringToWString UTF16ToWideHack
+#define WStringToWebString WideToUTF16Hack
+/*
 // Defined in WebkitGlue.cpp:
 std::wstring stringToWide(const std::string &stringToConvert);
 
 static std::wstring WebStringToWString(const WebKit::WebString &str) {
     return stringToWide(webkit_glue::WebStringToStdString(str));
 }
+
+WebKit::WebString WStringToWebString(const std::wstring &str) {
+    return StdStringToWebString(str);
+}
+*/
 
 WebViewProxy::WebViewProxy(int width, int height, bool isTransparent, bool enableAsyncRendering, int maxAsyncRenderPerSec, Awesomium::WebView* parent)
 : refCount(0), width(width), height(height), canvas(0),
@@ -89,6 +100,8 @@ pageID(-1), nextPageID(1)
 	renderBufferLock = new LockImpl();
 	refCountLock = new LockImpl();
 	navController = new NavigationController(this);
+
+	selfReference.reset(this);
 
 	if(enableAsyncRendering)
 		backBuffer = new Awesomium::RenderBuffer(width, height);
@@ -115,11 +128,14 @@ WebViewProxy::~WebViewProxy()
 
 void WebViewProxy::asyncStartup()
 {
-	view = ::WebView::Create();
+	// PRHFIXME: second arg is WebKit::WebEditingClient
+	view = ::WebView::Create(this, NULL);
 	WebPreferences().Apply(view);
+    view->GetSettings()->setShouldPaintCustomScrollbars(false);
 	view->InitializeMainFrame(this);
 	view->resize(WebKit::WebSize(width, height));
 	clientObject = new ClientObject(parent);
+    view->SetActive(true);
 
 	if(enableAsyncRendering)
 	{
@@ -157,7 +173,7 @@ void WebViewProxy::loadURL(const std::string& url, const std::wstring& frameName
 {
 	std::wstring frame = WebStringToWString(view->GetMainFrame()->name());
 	if(frameName.length())
-		if(view->GetFrameWithName(frameName))
+		if(view->GetFrameWithName(WStringToWebString(frameName)))
 			frame = frameName;
 
 	navController->LoadEntry(new NavigationEntry(nextPageID++, GURL(url), std::wstring(), frame, username, password));
@@ -169,7 +185,7 @@ void WebViewProxy::loadHTML(const std::string& html, const std::wstring& frameNa
 
 	std::wstring frame = WebStringToWString(view->GetMainFrame()->name());
 	if(frameName.length())
-		if(view->GetFrameWithName(frameName))
+		if(view->GetFrameWithName(WStringToWebString(frameName)))
 			frame = frameName;
 
 	navController->LoadEntry(new NavigationEntry(nextPageID++, html, GURL("file:///" + baseDirectory), frame));
@@ -195,7 +211,7 @@ void WebViewProxy::executeJavascript(const std::string& javascript, const std::w
 	WebFrame* frame = view->GetMainFrame();
 
 	if(frameName.length())
-		frame = view->GetFrameWithName(frameName);
+		frame = view->GetFrameWithName(WStringToWebString(frameName));
 
 	if(!frame)
 		return;
@@ -643,7 +659,7 @@ void WebViewProxy::Release()
 	if(refCount == 0)
 	{
 		refCountLock->Unlock();
-		delete this;
+		this->selfReference.reset();
 	}
 	else
 	{
@@ -694,7 +710,7 @@ WebWidget* WebViewProxy::CreatePopupWidget(::WebView* webview, bool focus_on_sho
 	return popup->getWidget();
 }
 
-WebKit::WebMediaPlayer* WebViewProxy::CreateWebMediaPlayer(WebKit::WebMediaPlayerClient* client)
+WebKit::WebMediaPlayer* WebViewProxy::createMediaPlayer(WebFrame *frame, WebKit::WebMediaPlayerClient* client)
 {
   scoped_refptr<media::FilterFactoryCollection> factory =
       new media::FilterFactoryCollection();
@@ -732,17 +748,34 @@ WebKit::WebMediaPlayer* WebViewProxy::CreateWebMediaPlayer(WebKit::WebMediaPlaye
 }
 
 
+WebKit::WebWorker* WebViewProxy::createWorker(WebFrame* frame, WebKit::WebWorkerClient*client) {
+	return NULL;
+}
+
+WebKit::WebPlugin* WebViewProxy::createPlugin(
+	WebFrame* frame,
+	const WebKit::WebPluginParams& params)
+{
+	return new webkit_glue::WebPluginImpl(frame, params, AsWeakPtr());
+}
+
+void WebViewProxy::CreatedPluginWindow(gfx::PluginWindowHandle handle) {
+}
+
+void WebViewProxy::WillDestroyPluginWindow(gfx::PluginWindowHandle handle) {
+}
+
 // This method is called to create a WebPluginDelegate implementation when a
 // new plugin is instanced.  See webkit_glue::CreateWebPluginDelegateHelper
 // for a default WebPluginDelegate implementation.
-WebPluginDelegate* WebViewProxy::CreatePluginDelegate(::WebView* webview, const GURL& url, 
-	const std::string& mime_type, const std::string& clsid, std::string* actual_mime_type)
+webkit_glue::WebPluginDelegate* WebViewProxy::CreatePluginDelegate(const GURL& url, 
+	const std::string& mime_type, std::string* actual_mime_type)
 {
 	if(!Awesomium::WebCore::Get().arePluginsEnabled())
 		return 0;
 
 	WebPluginInfo info;
-	if(!NPAPI::PluginList::Singleton()->GetPluginInfo(url, mime_type, clsid, true, &info, actual_mime_type))
+	if(!NPAPI::PluginList::Singleton()->GetPluginInfo(url, mime_type, true, &info, actual_mime_type))
 		return 0;
 
 	if(actual_mime_type && !actual_mime_type->empty())
@@ -797,8 +830,7 @@ void WebViewProxy::WindowObjectCleared(WebFrame* webframe)
 // take any additional separate action it wants to.
 //
 // is_redirect is true if this is a redirect rather than user action.
-WebKit::WebNavigationPolicy WebViewProxy::PolicyForNavigationAction(
-      ::WebView* webview,
+WebKit::WebNavigationPolicy WebViewProxy::decidePolicyForNavigation(
       WebFrame* frame,
       const WebKit::WebURLRequest& request,
       WebKit::WebNavigationType type,
@@ -820,7 +852,7 @@ WebKit::WebNavigationPolicy WebViewProxy::PolicyForNavigationAction(
 // redirect or not, so we pass this information through to allow us to set
 // the referrer properly in those cases. The consumed_client_redirect_src is
 // an empty invalid GURL in other cases.
-void WebViewProxy::DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame* frame, NavigationGesture gesture)
+void WebViewProxy::didStartProvisionalLoad(WebFrame* frame)
 {
 	WebDataSource* dataSource = frame->provisionalDataSource();
 
@@ -833,6 +865,33 @@ void WebViewProxy::DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame*
 	}
 }
 
+void WebViewProxy::loadURLExternally(WebKit::WebFrame*, const WebKit::WebURLRequest&, WebKit::WebNavigationPolicy){
+}
+void WebViewProxy::willSubmitForm(WebKit::WebFrame*, const WebKit::WebForm&){
+}
+void WebViewProxy::didCreateDataSource(WebKit::WebFrame*, WebKit::WebDataSource*){
+}
+void WebViewProxy::didReceiveDocumentData(WebKit::WebFrame*, const char*, size_t, bool&){
+}
+void WebViewProxy::didClearWindowObject(WebKit::WebFrame*){
+}
+void WebViewProxy::didCreateDocumentElement(WebKit::WebFrame*){
+}
+void WebViewProxy::didFailLoad(WebKit::WebFrame*, const WebKit::WebURLError&){
+}
+void WebViewProxy::didReceiveResponse(WebKit::WebFrame*, unsigned int, const WebKit::WebURLResponse&){
+}
+void WebViewProxy::didFinishResourceLoad(WebKit::WebFrame*, unsigned int){
+}
+void WebViewProxy::didFailResourceLoad(WebKit::WebFrame*, unsigned int, const WebKit::WebURLError&){
+}
+void WebViewProxy::didChangeContentsSize(WebKit::WebFrame*, const WebKit::WebSize&){
+}
+
+
+void WebViewProxy::didUpdateCurrentHistoryItem(WebFrame* frame) {
+}
+
 // Called when a provisional load is redirected (see GetProvisionalDataSource
 // for more info on provisional loads). This happens when the server sends
 // back any type of redirect HTTP response.
@@ -842,7 +901,7 @@ void WebViewProxy::DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame*
 // The last element in that vector will be the new URL (which will be the
 // same as the provisional data source's current URL), and the next-to-last
 // element will be the referring URL.
-void WebViewProxy::DidReceiveProvisionalLoadServerRedirect(::WebView* webview, WebFrame* frame) 
+void WebViewProxy::didReceiveServerRedirectForProvisionalLoad(WebFrame* frame) 
 {
 }
 
@@ -854,7 +913,7 @@ void WebViewProxy::DidReceiveProvisionalLoadServerRedirect(::WebView* webview, W
 //  @discussion This method is called after the provisional data source has
 //  failed to load.  The frame will continue to display the contents of the
 //  committed data source if there is one.
-void WebViewProxy::DidFailProvisionalLoadWithError(::WebView* webview, const WebError& error, WebFrame* frame)
+void WebViewProxy::didFailProvisionalLoad(WebFrame* frame, const WebKit::WebURLError& error)
 {
 }
 
@@ -879,7 +938,7 @@ void WebViewProxy::LoadNavigationErrorPage(WebFrame* frame, const WebKit::WebURL
 // The "is_new_navigation" flag will be true when a new session history entry
 // was created for the load.  The frame's GetHistoryState method can be used
 // to get the corresponding session history state.
-void WebViewProxy::DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bool is_new_navigation)
+void WebViewProxy::didCommitProvisionalLoad(WebFrame* frame, bool is_new_navigation)
 {
 	WebDataSource* dataSource = frame->dataSource();
 
@@ -913,67 +972,47 @@ void WebViewProxy::DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bo
 //  @param frame The frame for which the title has been received
 //  @discussion The title may update during loading; clients should be prepared for this.
 //  - (void)webView:(::WebView *)sender didReceiveTitle:(NSString *)title forFrame:(WebFrame *)frame;
-void WebViewProxy::DidReceiveTitle(::WebView* webview, const std::wstring& title, WebFrame* frame)
+void WebViewProxy::didReceiveTitle(WebFrame* frame, const WebKit::WebString& title)
 {
-	Awesomium::WebCore::Get().queueEvent(new WebViewEvents::ReceiveTitle(parent, title, WebStringToWString(frame->name())));
-}
-
-//
-//  @method webView:didFinishLoadForFrame:
-//  @abstract Notifies the delegate that the committed load of a frame has completed
-//  @param webView The ::WebView sending the message
-//  @param frame The frame that finished loading
-//  @discussion This method is called after the committed data source of a frame has successfully loaded
-//  and will only be called when all subresources such as images and stylesheets are done loading.
-//  Plug-In content and JavaScript-requested loads may occur after this method is called.
-//  - (void)webView:(::WebView *)sender didFinishLoadForFrame:(WebFrame *)frame;
-void WebViewProxy::DidFinishLoadForFrame(::WebView* webview, WebFrame* frame)
-{
-}
-
-//
-//  @method webView:didFailLoadWithError:forFrame:
-//  @abstract Notifies the delegate that the committed load of a frame has failed
-//  @param webView The ::WebView sending the message
-//  @param error The error that occurred
-//  @param frame The frame that failed to load
-//  @discussion This method is called after a data source has committed but failed to completely load.
-//  - (void)webView:(::WebView *)sender didFailLoadWithError:(NSError *)error forFrame:(WebFrame *)frame;
-void WebViewProxy::DidFailLoadWithError(::WebView* webview, const WebError& error, WebFrame* forFrame)
-{
+	Awesomium::WebCore::Get().queueEvent(
+		new WebViewEvents::ReceiveTitle(
+			parent,
+			WebStringToWString(title),
+			WebStringToWString(frame->name())));
 }
 
 // Notifies the delegate of a DOMContentLoaded event.
 // This is called when the html resource has been loaded, but
 // not necessarily all subresources (images, stylesheets). So, this is called
 // before DidFinishLoadForFrame.
-void WebViewProxy::DidFinishDocumentLoadForFrame(::WebView* webview, WebFrame* frame)
+void WebViewProxy::didFinishLoad(WebFrame* frame)
+{
+}
+
+void WebViewProxy::didFinishDocumentLoad(WebFrame* frame)
 {
 }
 
 // This method is called when we load a resource from an in-memory cache.
 // A return value of |false| indicates the load should proceed, but WebCore
 // appears to largely ignore the return value.
-bool WebViewProxy::DidLoadResourceFromMemoryCache(::WebView* webview, const WebRequest& request, const WebResponse& response, WebFrame* frame)
+void WebViewProxy::didLoadResourceFromMemoryCache(
+		WebFrame* frame,
+		const WebKit::WebURLRequest& request, 
+		const WebKit::WebURLResponse& response)
 {
-	return false;
 }
 
 // This is called after javascript onload handlers have been fired.
-void WebViewProxy::DidHandleOnloadEventsForFrame(::WebView* webview, WebFrame* frame)
+void WebViewProxy::didHandleOnloadEvents(WebFrame* frame)
 {
 }
 
 // This method is called when anchors within a page have been clicked.
 // It is very similar to DidCommitLoadForFrame.
-void WebViewProxy::DidChangeLocationWithinPageForFrame(::WebView* webview, WebFrame* frame, bool is_new_navigation)
+void WebViewProxy::didChangeLocationWithinPage(WebFrame* frame, bool is_new_navigation)
 {
 	updateForCommittedLoad(frame, is_new_navigation);
-}
-
-// This is called when the favicon for a frame has been received.
-void WebViewProxy::DidReceiveIconForFrame(::WebView* webview, WebFrame* frame)
-{
 }
 
 // Notifies the delegate that a frame will start a client-side redirect. When
@@ -988,8 +1027,8 @@ void WebViewProxy::DidReceiveIconForFrame(::WebView* webview, WebFrame* frame)
 // This function is intended to continue progress feedback while a
 // client-side redirect is pending. Watch out: WebKit seems to call us twice
 // for client redirects, resulting in two calls of this function.
-void WebViewProxy::WillPerformClientRedirect(::WebView* webview, WebFrame* frame, const GURL& src_url, const GURL& dest_url,
-	unsigned int delay_seconds, unsigned int fire_date)
+void WebViewProxy::willPerformClientRedirect(WebFrame* frame, const WebKit::WebURL& src_url, const WebKit::WebURL& dest_url,
+	double delay, double fireTime)
 {
 }
 
@@ -1003,7 +1042,7 @@ void WebViewProxy::WillPerformClientRedirect(::WebView* webview, WebFrame* frame
 // side redirect initiated is committed.
 //
 // See the implementation of FrameLoader::clientRedirectCancelledOrFinished.
-void WebViewProxy::DidCancelClientRedirect(::WebView* webview, WebFrame* frame)
+void WebViewProxy::didCancelClientRedirect(WebFrame* frame)
 {
 }
 
@@ -1011,7 +1050,7 @@ void WebViewProxy::DidCancelClientRedirect(::WebView* webview, WebFrame* frame)
 // webview and frame was due to a client redirect originating from source URL.
 // The information/notification obtained from this method is relevant until
 // the next provisional load is started, at which point it becomes obsolete.
-void WebViewProxy::DidCompleteClientRedirect(::WebView* webview, WebFrame* frame, const GURL& source)
+void WebViewProxy::didCompleteClientRedirect(WebFrame* frame, const WebKit::WebURL& source)
 {
 }
 
@@ -1022,7 +1061,7 @@ void WebViewProxy::DidCompleteClientRedirect(::WebView* webview, WebFrame* frame
 //  @discussion This method is called right before WebKit is done with the frame
 //  and the objects that it contains.
 //  - (void)webView:(::WebView *)sender willCloseFrame:(WebFrame *)frame;
-void WebViewProxy::WillCloseFrame(::WebView* webview, WebFrame* frame)
+void WebViewProxy::willClose(WebFrame* frame)
 {
 }
 
@@ -1031,7 +1070,7 @@ void WebViewProxy::WillCloseFrame(::WebView* webview, WebFrame* frame)
 // Associates the given identifier with the initial resource request.
 // Resource load callbacks will use the identifier throughout the life of the
 // request.
-void WebViewProxy::AssignIdentifierToRequest(::WebView* webview, uint32 identifier, const WebRequest& request)
+void WebViewProxy::assignIdentifierToRequest(WebFrame* frame, uint32 identifier, const WebKit::WebURLRequest& request)
 {
 }
 
@@ -1039,17 +1078,17 @@ void WebViewProxy::AssignIdentifierToRequest(::WebView* webview, uint32 identifi
 // delegate the opportunity to modify the request.  Note that request is
 // writable here, and changes to the URL, for example, will change the request
 // to be made.
-void WebViewProxy::WillSendRequest(::WebView* webview, uint32 identifier, WebRequest* request)
+void WebViewProxy::willSendRequest(WebFrame* frame, uint32 identifier, WebKit::WebURLRequest& request, const WebKit::WebURLResponse&)
 {
 }
 
 // Notifies the delegate that a subresource load has succeeded.
-void WebViewProxy::DidFinishLoading(::WebView* webview, uint32 identifier)
+void WebViewProxy::didFinishLoading(WebFrame* frame, uint32 identifier)
 {
 }
 
 // Notifies the delegate that a subresource load has failed, and why.
-void WebViewProxy::DidFailLoadingWithError(::WebView* webview, uint32 identifier, const WebError& error)
+void WebViewProxy::didFailLoading(WebFrame *frame, uint32 identifier, const WebKit::WebURLError& error)
 {
 }
 
@@ -1185,7 +1224,7 @@ void WebViewProxy::TakeFocus(::WebView* webview, bool reverse)
 }
 
 // Displays JS out-of-memory warning in the infobar
-void WebViewProxy::JSOutOfMemory()
+void WebViewProxy::didExhaustMemoryAvailableForScript(WebFrame*frame)
 {
 }
 
@@ -1237,7 +1276,7 @@ bool WebViewProxy::SmartInsertDeleteEnabled()
 {
 	return false;
 }
-
+		
 void WebViewProxy::DidBeginEditing() { }
 void WebViewProxy::DidChangeSelection() { }
 void WebViewProxy::DidChangeContents() { }
@@ -1288,14 +1327,6 @@ int WebViewProxy::GetHistoryBackListCount()
 int WebViewProxy::GetHistoryForwardListCount()
 {
 	return navController->GetEntryCount() - navController->GetLastCommittedEntryIndex() - 1;
-}
-
-// Notification that the form state of an element in the document, scroll
-// position, or possibly something else has changed that affects session
-// history (HistoryItem). This function will be called frequently, so the
-// implementor should not perform intensive operations in this notification.
-void WebViewProxy::OnNavStateChanged(::WebView* webview)
-{
 }
 
 // -------------------------------------------------------------------------
@@ -1448,7 +1479,7 @@ WebKit::WebRect WebViewProxy::windowResizerRect()
 // Keeps track of the necessary window move for a plugin window that resulted
 // from a scroll operation.  That way, all plugin windows can be moved at the
 // same time as each other and the page.
-void WebViewProxy::DidMovePlugin(const WebPluginGeometry& move)
+void WebViewProxy::DidMovePlugin(const webkit_glue::WebPluginGeometry& move)
 {
 }
 
@@ -1553,7 +1584,7 @@ void WebViewProxy::checkKeyboardFocus()
 
 void WebViewProxy::overrideIFrameWindow(const std::wstring& frameName)
 {
-	WebFrame* frame = view->GetFrameWithName(frameName);
+	WebFrame* frame = view->GetFrameWithName(WStringToWebString(frameName));
 
 	if(frame)
 	{
@@ -1600,7 +1631,7 @@ bool WebViewProxy::navigate(NavigationEntry *entry, bool reload)
 	// Get the right target frame for the entry.
 	WebFrame* frame = view->GetMainFrame();
 	if (!entry->GetTargetFrame().empty())
-		frame = view->GetFrameWithName(entry->GetTargetFrame());
+		frame = view->GetFrameWithName(WStringToWebString(entry->GetTargetFrame()));
 	// TODO(mpcomplete): should we clear the target frame, or should
 	// back/forward navigations maintain the target frame?
 

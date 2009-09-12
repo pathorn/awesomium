@@ -42,6 +42,9 @@
 #include "webkit/glue/webcursor.h"
 #include "base/gfx/platform_canvas.h"
 #include "WebHTTPBody.h"
+#include "WebPlugin.h"
+#include "WebMediaPlayer.h"
+#include "WebFrameClient.h"
 #include "WebInputEvent.h"
 #include "WebHistoryItem.h"
 #include "SkCanvas.h"
@@ -49,14 +52,24 @@
 #include "base/message_loop.h"
 #include "base/timer.h"
 #include "base/lock.h"
-
+#include "base/weak_ptr.h"
+#include "base/scoped_ptr.h"
+#include "webkit/glue/webplugin_page_delegate.h"
+#include "chrome/common/navigation_gesture.h"
 using WebKit::WebFrame;
 class NavigationEntry;
 class NavigationController;
 
-class WebViewProxy : public WebViewDelegate
+
+class WebViewProxy :
+	public WebViewDelegate,
+	public WebKit::WebFrameClient,
+	public webkit_glue::WebPluginPageDelegate,
+	public base::SupportsWeakPtr<WebViewProxy> 
 {
 	int refCount;
+	scoped_ptr<WebViewProxy> selfReference;
+
 	int width, height;
 	gfx::Rect dirtyArea;
 	Awesomium::RenderBuffer* renderBuffer;
@@ -164,6 +177,19 @@ public:
 	void AddRef();
 	void Release();
 
+	/** The following functions are inherited from WebPluginPageDelegate */
+	virtual webkit_glue::WebPluginDelegate* CreatePluginDelegate(
+		const GURL& url, const std::string& mime_type,
+		std::string* actual_mime_type);
+	virtual void CreatedPluginWindow(gfx::PluginWindowHandle handle);
+	virtual void WillDestroyPluginWindow(gfx::PluginWindowHandle handle);
+	void DidMovePlugin(const webkit_glue::WebPluginGeometry& move);
+	void DidStartLoadingForPlugin() {}
+	void DidStopLoadingForPlugin() {}
+	void ShowModalHTMLDialogForPlugin(
+		const GURL& url, const gfx::Size &size,
+		const std::string &json_args, std::string *json_retval) {}
+
 	/**
 	* The following functions are inherited from WebViewDelegate
 	*/
@@ -173,10 +199,11 @@ public:
 	WebWidget* CreatePopupWidgetWithInfo(::WebView* webview, const WebKit::WebPopupMenuInfo& popup_info);
 	WebWidget* CreatePopupWidget(::WebView* webview, bool focus_on_show);
 
-	WebKit::WebMediaPlayer* CreateWebMediaPlayer(WebKit::WebMediaPlayerClient* client);
+	WebKit::WebMediaPlayer* createMediaPlayer(WebFrame* frame, WebKit::WebMediaPlayerClient* client);
 
-	WebPluginDelegate* CreatePluginDelegate(::WebView* webview, const GURL& url, const std::string& mime_type,
-		const std::string& clsid, std::string* actual_mime_type);
+	WebKit::WebPlugin* createPlugin(WebFrame* frame, const WebKit::WebPluginParams &params);
+
+	WebKit::WebWorker* createWorker(WebFrame* frame, WebKit::WebWorkerClient*client);
 
 	void OpenURL(::WebView* webview, const GURL& url, const GURL& referrer, WebKit::WebNavigationPolicy disposition);
 
@@ -186,58 +213,68 @@ public:
 
 	void WindowObjectCleared(WebFrame* webframe);
 
-	WebKit::WebNavigationPolicy PolicyForNavigationAction(
-      ::WebView* webview,
+	void loadURLExternally(WebKit::WebFrame*, const WebKit::WebURLRequest&, WebKit::WebNavigationPolicy);
+	void willSubmitForm(WebKit::WebFrame*, const WebKit::WebForm&);
+	void didCreateDataSource(WebKit::WebFrame*, WebKit::WebDataSource*);
+	void didReceiveDocumentData(WebKit::WebFrame*, const char*, size_t, bool&);
+	void didClearWindowObject(WebKit::WebFrame*);
+	void didCreateDocumentElement(WebKit::WebFrame*);
+	void didFailLoad(WebKit::WebFrame*, const WebKit::WebURLError&);
+	void didFinishLoad(WebKit::WebFrame* frame);
+	void willSendRequest(WebKit::WebFrame*, unsigned int, WebKit::WebURLRequest&, const WebKit::WebURLResponse&);
+	void didReceiveResponse(WebKit::WebFrame*, unsigned int, const WebKit::WebURLResponse&);
+	void didFinishResourceLoad(WebKit::WebFrame*, unsigned int);
+	void didFailResourceLoad(WebKit::WebFrame*, unsigned int, const WebKit::WebURLError&);
+	void didChangeContentsSize(WebKit::WebFrame*, const WebKit::WebSize&);
+
+	WebKit::WebNavigationPolicy decidePolicyForNavigation(
       WebFrame* frame,
       const WebKit::WebURLRequest& request,
       WebKit::WebNavigationType type,
       WebKit::WebNavigationPolicy default_policy,
       bool is_redirect);
 
-	void DidStartProvisionalLoadForFrame(::WebView* webview, WebFrame* frame, NavigationGesture gesture);
+	void didUpdateCurrentHistoryItem(WebFrame* frame);
 
-	void DidReceiveProvisionalLoadServerRedirect(::WebView* webview, WebFrame* frame);
+	void didStartProvisionalLoad(WebFrame* frame);
 
-	void DidFailProvisionalLoadWithError(::WebView* webview, const WebKit::WebURLError& error, WebFrame* frame);
+	void didReceiveServerRedirectForProvisionalLoad(WebFrame* frame);
+
+	void didFailProvisionalLoad(WebFrame* frame, const WebKit::WebURLError& error);
 
 	void LoadNavigationErrorPage(WebFrame* frame, const WebKit::WebURLRequest& failed_request, const WebKit::WebURLError& error,
 		const std::string& html, bool replace);
 
-	void DidCommitLoadForFrame(::WebView* webview, WebFrame* frame, bool is_new_navigation);
+	void didCommitProvisionalLoad(WebFrame* frame, bool is_new_navigation);
 
-	void DidReceiveTitle(::WebView* webview, const std::wstring& title, WebFrame* frame);
+	void didReceiveTitle(WebFrame* frame, const WebKit::WebString& title);
 
-	void DidFinishLoadForFrame(::WebView* webview, WebFrame* frame);
+	void didFinishLoading(WebFrame* frame, unsigned id);
 
-	void DidFailLoadWithError(::WebView* webview, const WebKit::WebURLError& error, WebFrame* forFrame);
+	void didFailLoading(WebFrame* forFrame, unsigned id, const WebKit::WebURLError& error);
 
-	void DidFinishDocumentLoadForFrame(::WebView* webview, WebFrame* frame);
+	void didFinishDocumentLoad(WebFrame* frame);
 
-	bool DidLoadResourceFromMemoryCache(::WebView* webview, const WebKit::WebURLRequest& request, 
-		const WebKit::WebURLResponse& response, WebFrame* frame);
+	void didLoadResourceFromMemoryCache(
+		WebFrame* frame,
+		const WebKit::WebURLRequest& request, 
+		const WebKit::WebURLResponse& response);
 
-	void DidHandleOnloadEventsForFrame(::WebView* webview, WebFrame* frame);
+	void didHandleOnloadEvents(WebFrame* frame);
 
-	void DidChangeLocationWithinPageForFrame(::WebView* webview, WebFrame* frame, bool is_new_navigation);
+	void didChangeLocationWithinPage(WebFrame* frame, bool is_new_navigation);
 
-	void DidReceiveIconForFrame(::WebView* webview, WebFrame* frame);
+	void willPerformClientRedirect(
+		WebFrame* frame, const WebKit::WebURL& src_url, const WebKit::WebURL& dest_url,
+		double delay, double fireTime);
 
-	void WillPerformClientRedirect(::WebView* webview, WebFrame* frame, const GURL& src_url, 
-		const GURL& dest_url, unsigned int delay_seconds, unsigned int fire_date);
+	void didCancelClientRedirect(WebFrame* frame);
 
-	void DidCancelClientRedirect(::WebView* webview, WebFrame* frame);
+	void didCompleteClientRedirect(WebFrame* frame, const WebKit::WebURL& source);
 
-	void DidCompleteClientRedirect(::WebView* webview, WebFrame* frame, const GURL& source);
+	void willClose(WebFrame* frame);
 
-	void WillCloseFrame(::WebView* webview, WebFrame* frame);
-
-	void AssignIdentifierToRequest(::WebView* webview, uint32 identifier, const WebKit::WebURLRequest& request);
-
-	void WillSendRequest(::WebView* webview, uint32 identifier, WebKit::WebURLRequest* request);
-
-	void DidFinishLoading(::WebView* webview, uint32 identifier);
-
-	void DidFailLoadingWithError(::WebView* webview, uint32 identifier, const WebKit::WebURLError& error);
+	void assignIdentifierToRequest(WebKit::WebFrame*, unsigned int, const WebKit::WebURLRequest&);
 
 	void AddMessageToConsole(::WebView* webview, const std::wstring& message, unsigned int line_no, 
 		const std::wstring& source_id);
@@ -274,7 +311,7 @@ public:
 
 	void TakeFocus(::WebView* webview, bool reverse);
 
-	void JSOutOfMemory();
+	void didExhaustMemoryAvailableForScript(WebFrame*frame);
 
 	bool ShouldBeginEditing(::WebView* webview, std::wstring range);
 
@@ -306,8 +343,6 @@ public:
 
 	int GetHistoryBackListCount();
 	int GetHistoryForwardListCount();
-
-	void OnNavStateChanged(::WebView* webview);
 
 	void SetTooltipText(::WebView* webview, const std::wstring& tooltip_text);
 
@@ -343,13 +378,13 @@ public:
 
 	WebKit::WebRect windowResizerRect();
 
-	void DidMovePlugin(const WebPluginGeometry& move);
-
 	void runModal();
 
 	void show(WebKit::WebNavigationPolicy);
 
 	WebKit::WebScreenInfo screenInfo();
+
+	DISALLOW_COPY_AND_ASSIGN(WebViewProxy);
 };
 
 #endif

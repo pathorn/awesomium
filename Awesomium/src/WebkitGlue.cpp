@@ -66,10 +66,12 @@ void PrefetchDns(const std::string& hostname) {}
 
 void PrecacheUrl(const char16* url, int url_length) {}
 
+/*
 void AppendToLog(const char* file, int line, const char* msg)
 {
 	logging::LogMessage(file, line).stream() << msg;
 }
+*/
 /*
 bool GetMimeTypeFromExtension(const std::wstring &ext, std::string *mime_type)
 {
@@ -146,49 +148,6 @@ string16 GetLocalizedString(int message_id)
 	*/
 }
 
-StringPiece GetDataResource(int resource_id)
-{
-	/*
-#if defined(__APPLE__)
-	return "";
-#else
-	switch(resource_id)
-	{
-	case IDR_BROKENIMAGE:
-		{
-			static std::string broken_image_data;
-			
-			if(broken_image_data.empty())
-			{
-				std::wstring path = stringToWide(Awesomium::WebCore::Get().getBaseDirectory());
-				file_util::AppendToPath(&path, L"missingImage.gif");
-				bool success = file_util::ReadFileToString(path, &broken_image_data);
-				if(!success)
-					LOG(ERROR) << "Couldn't find missingImage.gif in the base directory. " <<
-						"This file is needed for broken image placeholders.";
-			}
-
-			return broken_image_data;
-		}
-	case IDR_FEED_PREVIEW:
-		{
-			// It is necessary to return a feed preview template that contains
-			// a {{URL}} substring where the feed URL should go; see the code 
-			// that computes feed previews in feed_preview.cc:MakeFeedPreview. 
-			// This fixes issue #932714.    
-			//
-
-			return std::string("Feed preview for {{URL}}");
-		}
-	default:
-		return "";
-	}
-#endif
-	*/
-
-	return "";
-}
-
 #if defined(WIN32)
 HCURSOR LoadCursor(int cursor_id)
 {
@@ -199,16 +158,6 @@ HCURSOR LoadCursor(int cursor_id)
 bool GetApplicationDirectory(std::wstring *path)
 {
 	return PathService::Get(base::DIR_EXE, path);
-}
-
-GURL GetInspectorURL()
-{
-	return GURL();
-}
-
-std::string GetUIResourceProtocol()
-{
-	return "";
 }
 
 bool GetExeDirectory(std::wstring *path)
@@ -222,15 +171,6 @@ bool SpellCheckWord(const wchar_t* word, int word_len, int* misspelling_start, i
 	*misspelling_start = 0;
 	*misspelling_len = 0;
 	return true;
-}
-
-void GetPlugins(bool refresh, std::vector<WebPluginInfo>* plugins)
-{
-//#if defined(WIN32)
-	NPAPI::PluginList::Singleton()->GetPlugins(refresh, plugins);
-//#else
-//	return false;
-//#endif
 }
 
 bool IsPluginRunningInRendererProcess()

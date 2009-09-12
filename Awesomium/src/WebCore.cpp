@@ -32,7 +32,7 @@
 #include "base/path_service.h"
 #include "base/file_util.h"
 #include "base/message_loop.h"
-
+#include "chrome/common/child_process.h"
 Awesomium::WebCore* Awesomium::WebCore::instance = 0;
 static MessageLoop* messageLoop = 0;
 
@@ -69,8 +69,10 @@ WebCore::WebCore(LogLevel level, bool enablePlugins, PixelFormat pixelFormat ) :
 	eventQueueLock = new Lock();
 	baseDirLock = new Lock();
 	customResponsePageLock = new Lock();
-	
 	messageLoop = new MessageLoop();
+
+    ChildProcess* coreProcess=new ChildProcess;
+    coreProcess->set_main_thread(new ChildThread);
 
 	LOG(INFO) << "Creating the core thread.";
 	coreThread = new base::Thread("CoreThread");

@@ -551,7 +551,7 @@ namespace {
 //-----------------------------------------------------------------------------
 
 namespace webkit_glue {
-	
+#if 0	
 	// factory function
 	ResourceLoaderBridge* ResourceLoaderBridge::Create(
 													   const std::string& method,
@@ -569,7 +569,7 @@ namespace webkit_glue {
 		return new ResourceLoaderBridgeImpl(method, url, policy_url, referrer,
 											headers, load_flags);
 	}
-	
+#endif
 	// Issue the proxy resolve request on the io thread, and wait
 	// for the result.
 	bool FindProxyForUrl(const GURL& url, std::string* proxy_list) {

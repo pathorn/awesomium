@@ -36,10 +36,10 @@
 #include "base/timer.h"
 #include "WebCore.h"
 
-class WindowlessPlugin : public WebPluginDelegate
+class WindowlessPlugin : public webkit_glue::WebPluginDelegate
 {
 public:
-	WebPlugin* plugin;
+	webkit_glue::WebPlugin* plugin;
 	scoped_refptr<NPAPI::PluginInstance> pluginInstance;
 	std::string pluginURL;
 	NPWindow window;
@@ -111,7 +111,7 @@ public:
 	// be passed from webkit. if false indicates that the plugin should download 
 	// the data. This also controls whether the plugin is instantiated as a full 
 	// page plugin (NP_FULL) or embedded (NP_EMBED)
-	bool Initialize(const GURL& url, char** argn, char** argv, int argc, WebPlugin* plugin, bool load_manually)
+	bool Initialize(const GURL& url, const std::vector<std::string>&argn, const std::vector<std::string>& argv, webkit_glue::WebPlugin* plugin, bool load_manually)
 	{
 		this->plugin = plugin;
 		pluginInstance->set_web_plugin(plugin);
@@ -122,14 +122,14 @@ public:
 		* our own structure, modifying/appending the wmode, and passing the result to PluginInstance::Start.
 		*/
 
-		const char** keys = new const char*[argc+1];
-		const char** vals = new const char*[argc+1];
+		const char** keys = new const char*[argv.size()+1];
+		const char** vals = new const char*[argv.size()+1];
 
 		bool hasNoWMode = true;
 
-		for(int i = 0;; i++)
+		for(unsigned int i = 0;; i++)
 		{
-			if(i == argc)
+			if(i == argv.size() || i == argn.size())
 			{
 				if(hasNoWMode)
 				{
@@ -144,8 +144,8 @@ public:
 			}
 			else
 			{
-				keys[i] = argn[i];
-				vals[i] = argv[i];
+				keys[i] = argn[i].c_str();
+				vals[i] = argv[i].c_str();
 			}
 
 			if(strcmp(keys[i], "wmode") == 0)
@@ -167,7 +167,7 @@ public:
 		plugin->SetWindow(0);
 
 		NPAPI::PluginInstance* oldInstance = NPAPI::PluginInstance::SetInitializingInstance(pluginInstance);
-		bool startResult = pluginInstance->Start(url, const_cast<char**>(keys), const_cast<char**>(vals), argc+1, load_manually);
+		bool startResult = pluginInstance->Start(url, const_cast<char**>(keys), const_cast<char**>(vals), argv.size()+1, load_manually);
 
 		NPAPI::PluginInstance::SetInitializingInstance(oldInstance);
 		pluginURL = url.spec();
@@ -237,6 +237,27 @@ public:
 		
 		CreateNewWindow(kDocumentWindowClass, 0, &bounds, &npCgContext.window);
 #endif
+	}
+
+	gfx::Rect GetRect() const {
+		gfx::Rect ret(window.x, window.y, window.width, window.height);
+		return ret;
+	}
+
+	gfx::Rect GetClipRect() const {
+		return gfx::Rect(
+			window.clipRect.left,
+			window.clipRect.top,
+			window.clipRect.right - window.clipRect.left,
+			window.clipRect.bottom - window.clipRect.top);
+	}
+
+	bool IsWindowless() const {
+		return false;
+	}
+
+	int GetQuirks() const {
+		return 0;
 	}
 
 	// Tells the plugin to paint the damaged rect.  The HDC is only used for
@@ -332,9 +353,9 @@ public:
 
 	// Receives notification about a resource load that the plugin initiated
 	// for a frame.
-	void DidFinishLoadWithReason(NPReason reason)
+	void DidFinishLoadWithReason(const GURL&url, NPReason reason, intptr_t data)
 	{
-		pluginInstance->DidFinishLoadWithReason(reason);
+		pluginInstance->DidFinishLoadWithReason(url, reason, (void*)data);
 	}
   
 	// Returns the process id of the process that is running the plugin.
@@ -354,7 +375,7 @@ public:
 	void FlushGeometryUpdates() {}
 
 	// The result of the script execution is returned via this function.
-	void SendJavaScriptStream(const std::string& url, const std::wstring& result,  bool success, bool notify_needed, intptr_t notify_data)
+	void SendJavaScriptStream(const GURL& url, const std::string& result,  bool success, bool notify_needed, intptr_t notify_data)
 	{
 		pluginInstance->SendJavaScriptStream(url, result, success, notify_needed, notify_data);
 	}
@@ -393,7 +414,7 @@ public:
 	void InstallMissingPlugin() {}
 
 	// Creates a WebPluginResourceClient instance and returns the same.
-	WebPluginResourceClient* CreateResourceClient(int resource_id, const GURL &url, bool notify_needed, intptr_t notify_data, intptr_t existing_stream)
+	webkit_glue::WebPluginResourceClient* CreateResourceClient(int resource_id, const GURL &url, bool notify_needed, intptr_t notify_data, intptr_t existing_stream)
 	{
 		if(existing_stream)
 		{
@@ -403,17 +424,15 @@ public:
 			return plugin_stream->AsResourceClient();
 		}
 
+/* "WebViewDelegate::DidFinishLoadWithReason is modified to include url and
+notify_data parameters, eliminating the URLRequestRouted method"
+ See diff of webplugin_delegate_impl.cc, rev 24655
+*/
+/*
 		if(notify_needed)
 			pluginInstance->SetURLLoadData(url, notify_data);
-
+*/
 		return pluginInstance->CreateStream(resource_id, url, "", notify_needed, (void*)notify_data);
-	}
-
-	// Notifies the delegate about a Get/Post URL request getting routed
-	void URLRequestRouted(const std::string&url, bool notify_needed, intptr_t notify_data)
-	{
-		if(notify_needed)
-			pluginInstance->SetURLLoadData(GURL(url.c_str()), notify_data);
 	}
 
 	bool HandleInputEvent(const WebKit::WebInputEvent &,WebKit::WebCursorInfo *) {
