@@ -1,6 +1,6 @@
 
 ifeq ($(CHROMIUMDIR),)
-CHROMIUMDIR=../../../chromium/chromium
+CHROMIUMDIR=../../../../dependencies/ch/c
 endif
 
 ifeq ($(CHROMIUMMODE),)
@@ -17,10 +17,18 @@ ifeq ($(CHROMIUMLIBPATH),)
 CHROMIUMLIBPATH=$(CHROMIUMDIR)/src/sconsbuild/$(CHROMIUMMODE)/lib
 endif
 
+CHLIBS=$(CHROMIUMDIR)/src/out/$(CHROMIUMMODE)/obj
+
 #CHROMIUMLIBNAMES=libbrowser.a libbz2.a libcommon.a libwebcore.a libdebugger.a libgoogleurl.a libgtest.a libharfbuzz.a libharfbuzz_interface.a libhunspell.a libmedia.a libplugin.a libprinting.a librenderer.a libutility.a libglue.a libnet.a libsdch.a libv8.a libv8_base.a libv8.a libwebkit.a libwebcore.a libskia.a libglue.a libwebcore.a libapp_base.a libbase.a libbase_gfx.a libevent.a libffmpeg.a libwtf.a libwebkit.a libsqlite3.a libicui18n.a libicuuc.a libicudata.a libxml2.a libmodp_b64.a libxslt.a libjpeg.a libpcre.a libpng.a libz.a libharfbuzz.a libharfbuzz_interface.a
 #CHROMIUMLIBS=$(addprefix $(CHROMIUMLIBPATH)/, $(CHROMIUMLIBNAMES))
-CHROMIUMLIBS=-L$(CHROMIUMLIBPATH) -lsmime3 -lssl3 -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lgdk-x11-2.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lgio-2.0 -lpango-1.0 -lcairo -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lfontconfig -lfreetype -lrt -lgconf-2 -lglib-2.0 -lX11 -lasound -lcommon -lbrowser -ldebugger -lrenderer -lutility -lprinting -lapp_base -lbase -licui18n -licuuc -licudata -levent -lbase_gfx -lskia -llinux_versioninfo -lharfbuzz -lharfbuzz_interface -ljpeg -lpng -lz -lnet -lgoogleurl -lsdch -lbz2 -lmodp_b64 -lv8_snapshot -lv8_base -lxml2 -lglue -lwebcore -lpcre -lwtf -lxslt -lsqlite3 -lwebkit -lmedia -lffmpeg -lhunspell -lplugin
+LIBDIRS=. app base ipc chrome net media webkit sandbox skia printing v8/tools/gyp sdch build/temp_gyp
 
+
+THIRDPARTYLIBDIRS=bzip2 ffmpeg harfbuzz hunspell icu38 libevent libjpeg libpng libxml libxslt lzma_sdk modp_b64 sqlite zlib
+
+CHROMIUMLDFLAGS=$(addprefix -L$(CHLIBS)/,$(LIBDIRS)) $(addprefix -L$(CHLIBS)/third_party/,$(THIRDPARTYLIBDIRS)) -L$(CHLIBS)/chrome/third_party/hunspell
+
+CHROMIUMLIBS=-L$(CHROMIUMLIBPATH) $(CHROMIUMLDFLAGS) -lsmime3 -lssl3 -lplds4 -lplc4 -lnspr4 -lpthread -ldl -lgdk-x11-2.0 -lgdk_pixbuf-2.0 -lm -lpangocairo-1.0 -lgio-2.0 -lpango-1.0 -lcairo -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -lfontconfig -lfreetype -lrt -lgconf-2 -lglib-2.0 -lX11 -lasound -lcommon -lbrowser -ldebugger -lrenderer -lutility -lprinting -lapp_base -lbase -licui18n -licuuc -licudata -llibevent -lbase_gfx -lskia -llinux_versioninfo -lharfbuzz -lharfbuzz_interface -llibjpeg -llibpng -lz -lnet -lgoogleurl -lsdch -lbz2 -lmodp_b64 -lv8_snapshot -lv8_base -llibxml -lglue -lwebcore -lpcre -lwtf -llibxslt -lwebkit -lmedia -lffmpeg -lhunspell -lplugin -lzlib -lsqlite
 # Sadly you aren't allowed to link to executables directly this way.
 #CHROMIUMLIBS= -Wl,-zmuldefs $(CHROMIUMDIR)/src/sconsbuild/Debug/chrome
 
